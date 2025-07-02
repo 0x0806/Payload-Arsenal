@@ -1315,6 +1315,21 @@ class PayloadArsenal {
 
         grid.innerHTML = '';
 
+        // Add section-wide actions
+        if (sectionPayloads.length > 1) {
+            const sectionActions = document.createElement('div');
+            sectionActions.className = 'section-actions';
+            sectionActions.innerHTML = `
+                <button class="btn-primary" onclick="app.generateSectionAsLines('${sectionId}')" style="margin-bottom: 1rem;">
+                    <i class="fas fa-layer-group"></i> Generate All as Lines (${sectionPayloads.length})
+                </button>
+                <button class="btn-secondary" onclick="app.selectAllInSection('${sectionId}')" style="margin-bottom: 1rem; margin-left: 0.5rem;">
+                    <i class="fas fa-check-square"></i> Select All
+                </button>
+            `;
+            grid.appendChild(sectionActions);
+        }
+
         sectionPayloads.forEach(([key, payload]) => {
             const card = this.createPayloadCard(key, payload);
             grid.appendChild(card);
@@ -1325,6 +1340,73 @@ class PayloadArsenal {
         if (countElement) {
             countElement.textContent = `${sectionPayloads.length} techniques`;
         }
+    }
+
+    generateSectionAsLines(sectionId) {
+        const sectionPayloads = this.getPayloadsBySection(sectionId);
+        let lineOutput = '';
+        let metadata = [];
+        
+        sectionPayloads.forEach(([key, payload], index) => {
+            lineOutput += `${payload.command}${index < sectionPayloads.length - 1 ? '\n' : ''}`;
+            metadata.push({
+                name: this.formatTitle(key),
+                complexity: payload.complexity,
+                category: payload.category || 'General'
+            });
+        });
+
+        // Show output panel
+        const outputPanel = document.getElementById('outputPanel');
+        outputPanel.classList.add('active');
+
+        document.getElementById('payloadOutput').textContent = lineOutput;
+        document.getElementById('description').textContent = `${this.formatTitle(sectionId)} - All techniques as lines (${sectionPayloads.length} commands)`;
+        
+        const metadataElement = document.getElementById('metadata');
+        metadataElement.innerHTML = `
+            <div class="section-metadata">
+                <div class="metadata-item">
+                    <strong>Section:</strong> ${this.formatTitle(sectionId)}
+                </div>
+                <div class="metadata-item">
+                    <strong>Total Commands:</strong> ${sectionPayloads.length}
+                </div>
+                <div class="metadata-item">
+                    <strong>Format:</strong> One command per line
+                </div>
+                <div class="metadata-item">
+                    <strong>Generated:</strong> ${new Date().toLocaleString()}
+                </div>
+                <div class="metadata-item">
+                    <strong>Total Length:</strong> ${lineOutput.length} characters
+                </div>
+                <div class="command-list">
+                    ${metadata.map((item, index) => `
+                        <div class="command-item">
+                            <span class="line-number">Line ${index + 1}:</span>
+                            <span class="name">${item.name}</span>
+                            <span class="complexity-${item.complexity}">${item.complexity}</span>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+
+        this.applySyntaxHighlighting();
+        this.showNotification(`Generated ${sectionPayloads.length} ${this.formatTitle(sectionId)} commands as lines!`, 'success');
+    }
+
+    selectAllInSection(sectionId) {
+        const sectionPayloads = this.getPayloadsBySection(sectionId);
+        this.selectedPayloads = this.selectedPayloads || new Set();
+        
+        sectionPayloads.forEach(([key]) => {
+            this.selectedPayloads.add(key);
+        });
+        
+        this.updateBulkUI();
+        this.showNotification(`Selected all ${sectionPayloads.length} techniques from ${this.formatTitle(sectionId)}`, 'success');
     }
 
     getPayloadsBySection(sectionId) {
@@ -1519,13 +1601,18 @@ class PayloadArsenal {
 
         let bulkOutput = '';
         let bulkMetadata = [];
+        let lineFormat = '';
         
-        this.selectedPayloads.forEach(type => {
+        this.selectedPayloads.forEach((type, index) => {
             const payload = payloads[type];
             if (payload) {
+                // Add to bulk output with headers
                 bulkOutput += `# ${this.formatTitle(type)} - ${payload.category}\n`;
                 bulkOutput += `# ${payload.description}\n`;
                 bulkOutput += `${payload.command}\n\n`;
+                
+                // Add to line format (one command per line)
+                lineFormat += `${payload.command}${index < this.selectedPayloads.size - 1 ? '\n' : ''}`;
                 
                 bulkMetadata.push({
                     name: this.formatTitle(type),
@@ -1540,8 +1627,9 @@ class PayloadArsenal {
         const outputPanel = document.getElementById('outputPanel');
         outputPanel.classList.add('active');
 
-        document.getElementById('payloadOutput').textContent = bulkOutput;
-        document.getElementById('description').textContent = `Bulk generated ${this.selectedPayloads.size} payloads`;
+        // Use line format for display
+        document.getElementById('payloadOutput').textContent = lineFormat;
+        document.getElementById('description').textContent = `Multiple payloads generated (${this.selectedPayloads.size} techniques) - One per line`;
         
         const metadata = document.getElementById('metadata');
         metadata.innerHTML = `
@@ -1550,25 +1638,60 @@ class PayloadArsenal {
                     <strong>Total Payloads:</strong> ${this.selectedPayloads.size}
                 </div>
                 <div class="metadata-item">
+                    <strong>Format:</strong> Multiple lines (one command per line)
+                </div>
+                <div class="metadata-item">
                     <strong>Generated:</strong> ${new Date().toLocaleString()}
                 </div>
                 <div class="metadata-item">
-                    <strong>Total Length:</strong> ${bulkOutput.length} characters
+                    <strong>Total Length:</strong> ${lineFormat.length} characters
+                </div>
+                <div class="metadata-item">
+                    <strong>Lines:</strong> ${this.selectedPayloads.size}
                 </div>
                 <div class="bulk-list">
-                    ${bulkMetadata.map(item => `
+                    ${bulkMetadata.map((item, index) => `
                         <div class="bulk-item">
-                            <span class="name">${item.name}</span>
+                            <span class="name">Line ${index + 1}: ${item.name}</span>
                             <span class="complexity-${item.complexity}">${item.complexity}</span>
                             <span class="category">${item.category}</span>
                         </div>
                     `).join('')}
                 </div>
+                <div class="format-options" style="margin-top: 1rem;">
+                    <button class="btn-secondary" onclick="app.toggleOutputFormat('detailed')" style="margin-right: 0.5rem;">
+                        <i class="fas fa-list"></i> Detailed View
+                    </button>
+                    <button class="btn-secondary" onclick="app.toggleOutputFormat('lines')">
+                        <i class="fas fa-align-left"></i> Lines Only
+                    </button>
+                </div>
             </div>
         `;
 
+        // Store both formats for toggling
+        this.currentBulkOutput = {
+            detailed: bulkOutput,
+            lines: lineFormat
+        };
+
         this.applySyntaxHighlighting();
-        this.showNotification(`Generated ${this.selectedPayloads.size} payloads successfully!`, 'success');
+        this.showNotification(`Generated ${this.selectedPayloads.size} payloads as lines!`, 'success');
+    }
+
+    toggleOutputFormat(format) {
+        if (!this.currentBulkOutput) return;
+        
+        const outputElement = document.getElementById('payloadOutput');
+        if (format === 'detailed') {
+            outputElement.textContent = this.currentBulkOutput.detailed;
+            this.showNotification('Switched to detailed format', 'info');
+        } else {
+            outputElement.textContent = this.currentBulkOutput.lines;
+            this.showNotification('Switched to lines format', 'info');
+        }
+        
+        this.applySyntaxHighlighting();
     }
 
     showPayloadDetails(type) {
