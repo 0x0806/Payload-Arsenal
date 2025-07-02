@@ -88,6 +88,34 @@
                 <button class="nav-item" data-section="lolbas">Living Off The Land</button>
             </div>
             <div class="nav-section">
+                <h3><i class="fas fa-crown"></i> Privilege</h3>
+                <button class="nav-item" data-section="privilege">Privilege Escalation</button>
+            </div>
+            <div class="nav-section">
+                <h3><i class="fas fa-arrows-alt"></i> Lateral</h3>
+                <button class="nav-item" data-section="lateral">Lateral Movement</button>
+            </div>
+            <div class="nav-section">
+                <h3><i class="fas fa-upload"></i> Exfiltration</h3>
+                <button class="nav-item" data-section="exfiltration">Data Exfiltration</button>
+            </div>
+            <div class="nav-section">
+                <h3><i class="fas fa-ghost"></i> Rootkit</h3>
+                <button class="nav-item" data-section="rootkit">Rootkit Techniques</button>
+            </div>
+            <div class="nav-section">
+                <h3><i class="fas fa-robot"></i> AI Evasion</h3>
+                <button class="nav-item" data-section="ai_evasion">AI/ML Evasion</button>
+            </div>
+            <div class="nav-section">
+                <h3><i class="fas fa-microchip"></i> Hardware</h3>
+                <button class="nav-item" data-section="hardware">Hardware Attacks</button>
+            </div>
+            <div class="nav-section">
+                <h3><i class="fas fa-bug"></i> Zero-Day</h3>
+                <button class="nav-item" data-section="zero_day">Zero-Day Framework</button>
+            </div>
+            <div class="nav-section">
                 <h3><i class="fas fa-terminal"></i> Custom</h3>
                 <button class="nav-item" data-section="custom">Payload Builder</button>
             </div>
@@ -325,7 +353,99 @@
                     </button>
                 </div>
             </div>
+
+            <!-- Add new sections -->
+            <div class="content-section" id="privilege">
+                <div class="section-header">
+                    <h2><i class="fas fa-crown"></i> Privilege Escalation</h2>
+                    <span class="section-count">4 techniques</span>
+                </div>
+                <div class="payload-grid"></div>
+            </div>
+
+            <div class="content-section" id="lateral">
+                <div class="section-header">
+                    <h2><i class="fas fa-arrows-alt"></i> Lateral Movement</h2>
+                    <span class="section-count">4 techniques</span>
+                </div>
+                <div class="payload-grid"></div>
+            </div>
+
+            <div class="content-section" id="exfiltration">
+                <div class="section-header">
+                    <h2><i class="fas fa-upload"></i> Data Exfiltration</h2>
+                    <span class="section-count">4 techniques</span>
+                </div>
+                <div class="payload-grid"></div>
+            </div>
+
+            <div class="content-section" id="rootkit">
+                <div class="section-header">
+                    <h2><i class="fas fa-ghost"></i> Rootkit Techniques</h2>
+                    <span class="section-count">4 techniques</span>
+                </div>
+                <div class="expert-warning">
+                    <i class="fas fa-skull-crossbones"></i>
+                    <span>EXTREME CAUTION - These techniques can cause permanent system damage</span>
+                </div>
+                <div class="payload-grid"></div>
+            </div>
+
+            <div class="content-section" id="ai_evasion">
+                <div class="section-header">
+                    <h2><i class="fas fa-robot"></i> AI/ML Evasion</h2>
+                    <span class="section-count">5 techniques</span>
+                </div>
+                <div class="ai-info">
+                    <i class="fas fa-brain"></i>
+                    <span>Advanced techniques for evading AI-based security systems</span>
+                </div>
+                <div class="payload-grid"></div>
+            </div>
+
+            <div class="content-section" id="hardware">
+                <div class="section-header">
+                    <h2><i class="fas fa-microchip"></i> Hardware Attacks</h2>
+                    <span class="section-count">2 techniques</span>
+                </div>
+                <div class="expert-warning">
+                    <i class="fas fa-radiation"></i>
+                    <span>Hardware-level attacks requiring specialized knowledge and tools</span>
+                </div>
+                <div class="payload-grid"></div>
+            </div>
+
+            <div class="content-section" id="zero_day">
+                <div class="section-header">
+                    <h2><i class="fas fa-bug"></i> Zero-Day Framework</h2>
+                    <span class="section-count">2 techniques</span>
+                </div>
+                <div class="zero-day-warning">
+                    <i class="fas fa-skull-crossbones"></i>
+                    <span>RESEARCH ONLY - Zero-day exploitation framework for advanced security research</span>
+                </div>
+                <div class="payload-grid"></div>
+            </div>
         </main>
+
+        <!-- Bulk Selection Panel -->
+        <div class="bulk-panel" id="bulkPanel">
+            <div class="bulk-header">
+                <h3><i class="fas fa-layer-group"></i> Bulk Generation</h3>
+                <span class="selected-count"><span id="selectedCount">0</span> selected</span>
+            </div>
+            <div class="bulk-content">
+                <div class="selected-list" id="selectedList"></div>
+                <div class="bulk-actions">
+                    <button class="btn-bulk-generate" onclick="app.generateBulkPayloads()">
+                        <i class="fas fa-rocket"></i> Generate All
+                    </button>
+                    <button class="btn-bulk-clear" onclick="app.clearSelection()">
+                        <i class="fas fa-trash"></i> Clear
+                    </button>
+                </div>
+            </div>
+        </div>
 
         <!-- Output Panel -->
         <div class="output-panel" id="outputPanel">
