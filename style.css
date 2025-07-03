@@ -142,6 +142,17 @@ body {
     color: var(--text-primary);
 }
 
+/* Prevent CSS injection */
+* {
+    max-width: 100%;
+}
+
+/* Sanitize user input areas */
+textarea, input[type="text"] {
+    word-break: break-word;
+    overflow-wrap: break-word;
+}
+
 /* Advanced Scrollbar */
 ::-webkit-scrollbar {
     width: 8px;
