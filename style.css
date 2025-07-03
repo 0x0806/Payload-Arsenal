@@ -190,7 +190,7 @@ body {
 }
 
 /* App Layout */
-.app {
+.app-container {
     display: grid;
     grid-template-columns: var(--layout-sidebar-width) 1fr;
     grid-template-rows: var(--layout-header-height) 1fr;
@@ -346,7 +346,7 @@ body {
 }
 
 /* Main Content */
-.main {
+.main-content {
     grid-area: main;
     padding: var(--space-6);
     overflow-y: auto;
@@ -377,15 +377,100 @@ body {
     margin-bottom: var(--space-8);
 }
 
-.search-input {
+.search-suggestions {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+    z-index: var(--z-index-dropdown);
+    display: none;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.suggestion-item {
+    padding: var(--space-3) var(--space-4);
+    cursor: pointer;
+    border-bottom: 1px solid var(--color-border);
+    transition: var(--transition-fast);
+}
+
+.suggestion-item:last-child {
+    border-bottom: none;
+}
+
+.suggestion-item:hover {
+    background: var(--color-surface-raised);
+    color: var(--color-accent-primary);
+}
+
+.search-box {
+    display: flex;
+    gap: var(--space-3);
+    align-items: center;
+}
+
+.search-input-container {
+    position: relative;
+    flex: 1;
+}
+
+.search-input-container input {
     width: 100%;
-    padding: var(--space-4) var(--space-4) var(--space-4) var(--space-12);
+    padding: var(--space-4) var(--space-12) var(--space-4) var(--space-12);
     border: 2px solid var(--color-border);
     border-radius: var(--radius-xl);
     background: var(--color-surface);
     color: var(--color-text-primary);
     font-size: var(--font-size-lg);
     transition: var(--transition-fast);
+}
+
+.search-input-container input:focus {
+    border-color: var(--color-accent-primary);
+    box-shadow: var(--shadow-cyber);
+    outline: none;
+}
+
+.search-input-container i {
+    position: absolute;
+    left: var(--space-4);
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--color-text-muted);
+}
+
+.search-ai-indicator {
+    position: absolute;
+    right: var(--space-4);
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--color-accent-primary);
+    cursor: pointer;
+}
+
+.search-filter,
+.search-ai {
+    padding: var(--space-3) var(--space-4);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background: var(--color-surface);
+    color: var(--color-text-primary);
+    cursor: pointer;
+    transition: var(--transition-fast);
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+.search-filter:hover,
+.search-ai:hover {
+    background: var(--color-accent-primary);
+    color: white;
 }
 
 .search-input:focus {
@@ -776,14 +861,69 @@ body {
     to { transform: translateY(0); opacity: 1; }
 }
 
+/* Filter Panel */
+.filter-panel {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+    padding: var(--space-6);
+    z-index: var(--z-index-dropdown);
+    display: none;
+    margin-top: var(--space-2);
+}
+
+.filter-panel.active {
+    display: block;
+}
+
+.filter-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--space-4);
+}
+
+.filter-group {
+    margin-bottom: var(--space-4);
+}
+
+.filter-group label {
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
+    color: var(--color-text-primary);
+    margin-bottom: var(--space-2);
+    display: block;
+}
+
+.filter-options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+}
+
+.filter-option {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    cursor: pointer;
+    font-size: var(--font-size-sm);
+}
+
+.filter-option input {
+    margin: 0;
+}
+
 /* Responsive Design */
 @media (max-width: 1024px) {
-    .app {
-        grid-template-columns: 1fr;
-        grid-template-rows: var(--layout-header-height) 1fr;
-        grid-template-areas: 
-            "header"
-            "main";
+    .app-container {
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
     }
 
     .sidebar {
@@ -793,11 +933,19 @@ body {
         width: var(--layout-sidebar-width);
         height: 100vh;
         z-index: var(--z-index-modal);
-        transition: var(--transition-normal);
+        transition: left var(--transition-normal);
+        background: var(--color-surface);
+        border-right: 1px solid var(--color-border);
     }
 
     .sidebar.active {
         left: 0;
+        box-shadow: var(--shadow-xl);
+    }
+
+    .main-content {
+        width: 100%;
+        padding: var(--space-4);
     }
 
     .cards-grid {
