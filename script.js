@@ -1031,7 +1031,7 @@ Write-Host "  Invoke-DCOMCommand -ComputerName 'target' -Command 'notepad.exe'" 
                 category: "Lateral Movement",
                 tags: ["wmi-execution", "dcom", "service-execution", "token-impersonation"],
                 mitre_id: "T1021"
-            }
+            },
 
             powershell_obfuscation: {
                 command: `# PowerShell Obfuscation Techniques
@@ -1252,9 +1252,12 @@ Write-Host "\`n[CRITICAL] Unauthorized data exfiltration is illegal!" -Foregroun
             section.appendChild(payloadGrid);
             contentSections.appendChild(section);
 
-            this.populateSection(sectionId, payloadGrid);
-            this.hideLoadingIndicator();
-            console.log(`Section ${sectionId} loaded successfully`);
+            // Add timeout to ensure DOM is ready
+            setTimeout(() => {
+                this.populateSection(sectionId, payloadGrid);
+                this.hideLoadingIndicator();
+                console.log(`Section ${sectionId} loaded successfully`);
+            }, 100);
         } catch (error) {
             console.error('Failed to generate section content:', error);
             this.hideLoadingIndicator();
@@ -1277,10 +1280,23 @@ Write-Host "\`n[CRITICAL] Unauthorized data exfiltration is illegal!" -Foregroun
     populateSection(sectionId, container) {
         const sectionPayloads = this.getPayloadsBySection(sectionId);
 
-        sectionPayloads.forEach(([key, payload]) => {
-            const card = this.createPayloadCard(key, payload);
-            container.appendChild(card);
-        });
+        if (sectionPayloads.length === 0) {
+            const noPayloads = document.createElement('div');
+            noPayloads.className = 'no-payloads';
+            noPayloads.innerHTML = `
+                <div class="no-payloads-content">
+                    <i class="fas fa-info-circle"></i>
+                    <h3>No techniques available</h3>
+                    <p>This section is currently being developed. Check back soon for new content!</p>
+                </div>
+            `;
+            container.appendChild(noPayloads);
+        } else {
+            sectionPayloads.forEach(([key, payload]) => {
+                const card = this.createPayloadCard(key, payload);
+                container.appendChild(card);
+            });
+        }
 
         const countElement = document.querySelector(`#${sectionId} .section-count`);
         if (countElement) {
@@ -1332,19 +1348,60 @@ Write-Host "\`n[CRITICAL] Unauthorized data exfiltration is illegal!" -Foregroun
 
     getPayloadsBySection(sectionId) {
         const sectionMap = {
-            basic: ['system_info', 'network_scan'],
-            network: ['network_scan'],
+            // AI-Powered sections
+            ai_generation: ['system_info', 'powershell_obfuscation', 'advanced_windows_evasion'],
+            ai_analysis: ['credential_dump', 'privilege_escalation', 'network_scan'],
+            ai_evasion: ['advanced_windows_evasion', 'powershell_obfuscation'],
+            
+            // Reconnaissance
+            basic: ['system_info', 'network_scan', 'linux_enumeration'],
+            network: ['network_scan', 'windows_lateral_movement'],
+            osint: ['system_info', 'credential_dump'],
+            
+            // File Operations
             filesystem: ['data_exfiltration'],
-            edr: ['powershell_obfuscation', 'advanced_windows_evasion'],
+            steganography: ['data_exfiltration'],
+            forensics: ['system_info', 'linux_enumeration'],
+            
+            // Defense Evasion
+            edr: ['advanced_windows_evasion', 'powershell_obfuscation'],
+            av_bypass: ['advanced_windows_evasion', 'powershell_obfuscation'],
+            obfuscation: ['powershell_obfuscation'],
+            
+            // Advanced Techniques
+            memory: ['windows_lateral_movement', 'advanced_windows_evasion'],
+            kernel: ['linux_privilege_escalation', 'linux_rootkit_techniques'],
+            hardware: ['system_info'],
+            
+            // Command & Control
+            c2: ['windows_lateral_movement', 'data_exfiltration'],
+            covert: ['data_exfiltration', 'powershell_obfuscation'],
+            tunneling: ['network_scan', 'windows_lateral_movement'],
+            
+            // Persistence
             persistence: ['persistence_registry', 'windows_persistence_advanced'],
-            privilege: ['privilege_escalation', 'linux_privilege_escalation'],
-            credentials: ['credential_dump'],
-            exfiltration: ['data_exfiltration'],
-            linux: ['linux_enumeration', 'linux_privilege_escalation', 'linux_rootkit_techniques'],
-            lateral: ['windows_lateral_movement'],
             rootkit: ['linux_rootkit_techniques'],
-            av_bypass: ['advanced_windows_evasion'],
-            memory: ['windows_lateral_movement']
+            bootkit: ['linux_rootkit_techniques'],
+            
+            // Privilege Escalation
+            privilege: ['privilege_escalation', 'linux_privilege_escalation'],
+            token: ['advanced_windows_evasion', 'windows_lateral_movement'],
+            exploit: ['privilege_escalation', 'linux_privilege_escalation'],
+            
+            // Lateral Movement
+            lateral: ['windows_lateral_movement'],
+            pivoting: ['windows_lateral_movement', 'network_scan'],
+            domain: ['windows_lateral_movement', 'credential_dump'],
+            
+            // Exfiltration
+            exfiltration: ['data_exfiltration'],
+            dns_exfil: ['data_exfiltration'],
+            cloud_exfil: ['data_exfiltration'],
+            
+            // Custom Tools
+            custom: Object.keys(this.payloads),
+            automation: ['powershell_obfuscation', 'advanced_windows_evasion'],
+            framework: Object.keys(this.payloads)
         };
 
         const payloadKeys = sectionMap[sectionId] || Object.keys(this.payloads);
