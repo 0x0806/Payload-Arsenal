@@ -1,421 +1,661 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Advanced Payload Arsenal | Cybersecurity Research Platform</title>
-    <meta name="description" content="Advanced cybersecurity research platform with comprehensive payload generation for Windows, Linux, and Unix systems.">
-    <meta name="author" content="0x0806">
-    <meta name="keywords" content="cybersecurity, payload generation, penetration testing, red team, security research">
-    <meta name="robots" content="noindex, nofollow">
-    <link href="style.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E🛡️%3C/text%3E%3C/svg%3E">
+    <title>Payload Arsenal - Advanced Payload Generator</title>
+    <link href="style.css" rel="stylesheet" type="text/css" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;400;500;600&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
     <div class="app-container">
+        <!-- Mobile Menu Toggle -->
+        <button class="mobile-menu-toggle" id="mobileMenuToggle">
+            <i class="fas fa-bars"></i>
+        </button>
+
         <!-- Header -->
         <header class="header">
             <div class="header-content">
-                <div class="brand">
-                    <div class="logo">
-                        <i class="fas fa-shield-virus"></i>
-                    </div>
-                    <div class="brand-text">
-                        <h1>Advanced Payload Arsenal</h1>
-                        <span class="tagline">Professional Cybersecurity Research Platform</span>
-                    </div>
+                <div class="logo">
+                    <i class="fas fa-shield-virus"></i>
+                    <span>Payload Arsenal</span>
                 </div>
-                <div class="header-stats">
-                    <div class="stat-item">
-                        <span class="stat-number" id="totalPayloads">500+</span>
-                        <span class="stat-label">Payloads</span>
-                    </div>
-                    <div class="stat-item">
-                        <span class="stat-number">3</span>
-                        <span class="stat-label">Platforms</span>
-                    </div>
-                    <div class="stat-item">
-                        <span class="stat-number">15</span>
-                        <span class="stat-label">Categories</span>
-                    </div>
-                </div>
-                <div class="header-actions">
-                    <button class="btn-icon" id="themeToggle" title="Toggle Theme">
+                <div class="header-controls">
+                    <button class="theme-toggle" id="themeToggle">
                         <i class="fas fa-moon"></i>
                     </button>
-                    <button class="btn-icon" id="settingsBtn" title="Settings">
-                        <i class="fas fa-cog"></i>
-                    </button>
-                    <button class="btn-icon" id="menuToggle" title="Menu">
-                        <i class="fas fa-bars"></i>
-                    </button>
+                    <div class="header-info">
+                        <span class="version">v3.0.0</span>
+                        <span class="developer">Developed by 0x0806</span>
+                    </div>
+                    <div class="user-menu">
+                        <button class="user-avatar">
+                            <i class="fas fa-user-ninja"></i>
+                        </button>
+                    </div>
                 </div>
             </div>
-            <div class="security-notice">
-                <i class="fas fa-exclamation-triangle"></i>
-                <span>ADVANCED SECURITY RESEARCH PLATFORM - AUTHORIZED PERSONNEL ONLY</span>
+            <div class="header-progress">
+                <div class="progress-bar" id="progressBar"></div>
             </div>
         </header>
 
-        <!-- Sidebar Navigation -->
-        <nav class="sidebar" id="sidebar">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
             <div class="sidebar-header">
-                <div class="sidebar-search">
-                    <input type="text" id="navSearch" placeholder="Search techniques...">
-                    <i class="fas fa-search"></i>
+                <h3>Arsenal Categories</h3>
+                <button class="sidebar-close" id="sidebarClose">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <nav class="nav-menu">
+                <div class="search-container">
+                    <input type="text" class="search-input" placeholder="Search payloads..." id="searchInput">
+                    <i class="fas fa-search search-icon"></i>
                 </div>
-            </div>
 
-            <div class="nav-section">
-                <h3><i class="fas fa-info-circle"></i> Reconnaissance</h3>
-                <button class="nav-item active" data-section="system_info">System Information</button>
-                <button class="nav-item" data-section="network_recon">Network Discovery</button>
-                <button class="nav-item" data-section="osint">OSINT Gathering</button>
-                <button class="nav-item" data-section="enumeration">Advanced Enumeration</button>
-            </div>
-
-            <div class="nav-section">
-                <h3><i class="fas fa-key"></i> Credential Access</h3>
-                <button class="nav-item" data-section="credential_dump">Credential Harvesting</button>
-                <button class="nav-item" data-section="password_attacks">Password Attacks</button>
-                <button class="nav-item" data-section="token_theft">Token Manipulation</button>
-                <button class="nav-item" data-section="kerberos">Kerberos Attacks</button>
-            </div>
-
-            <div class="nav-section">
-                <h3><i class="fas fa-crown"></i> Privilege Escalation</h3>
-                <button class="nav-item" data-section="windows_privesc">Windows PrivEsc</button>
-                <button class="nav-item" data-section="linux_privesc">Linux PrivEsc</button>
-                <button class="nav-item" data-section="unix_privesc">Unix PrivEsc</button>
-                <button class="nav-item" data-section="kernel_exploits">Kernel Exploits</button>
-            </div>
-
-            <div class="nav-section">
-                <h3><i class="fas fa-shield-alt"></i> Defense Evasion</h3>
-                <button class="nav-item" data-section="av_evasion">Antivirus Evasion</button>
-                <button class="nav-item" data-section="edr_bypass">EDR Bypass</button>
-                <button class="nav-item" data-section="obfuscation">Code Obfuscation</button>
-                <button class="nav-item" data-section="steganography">Steganography</button>
-            </div>
-
-            <div class="nav-section">
-                <h3><i class="fas fa-history"></i> Persistence</h3>
-                <button class="nav-item" data-section="windows_persistence">Windows Persistence</button>
-                <button class="nav-item" data-section="linux_persistence">Linux Persistence</button>
-                <button class="nav-item" data-section="bootkit">Bootkit Techniques</button>
-                <button class="nav-item" data-section="rootkit">Rootkit Methods</button>
-            </div>
-
-            <div class="nav-section">
-                <h3><i class="fas fa-arrows-alt"></i> Lateral Movement</h3>
-                <button class="nav-item" data-section="smb_lateral">SMB Lateral Movement</button>
-                <button class="nav-item" data-section="wmi_lateral">WMI Execution</button>
-                <button class="nav-item" data-section="ssh_lateral">SSH Tunneling</button>
-                <button class="nav-item" data-section="rdp_lateral">RDP Techniques</button>
-            </div>
-
-            <div class="nav-section">
-                <h3><i class="fas fa-network-wired"></i> Command & Control</h3>
-                <button class="nav-item" data-section="c2_channels">C2 Channels</button>
-                <button class="nav-item" data-section="covert_comms">Covert Communications</button>
-                <button class="nav-item" data-section="dns_tunneling">DNS Tunneling</button>
-                <button class="nav-item" data-section="web_shells">Web Shells</button>
-            </div>
-
-            <div class="nav-section">
-                <h3><i class="fas fa-upload"></i> Exfiltration</h3>
-                <button class="nav-item" data-section="data_exfil">Data Exfiltration</button>
-                <button class="nav-item" data-section="dns_exfil">DNS Exfiltration</button>
-                <button class="nav-item" data-section="encrypted_exfil">Encrypted Channels</button>
-                <button class="nav-item" data-section="cloud_exfil">Cloud Exfiltration</button>
-            </div>
-
-            <div class="nav-section">
-                <h3><i class="fas fa-bomb"></i> Impact</h3>
-                <button class="nav-item" data-section="destruction">Data Destruction</button>
-                <button class="nav-item" data-section="ransomware">Ransomware Techniques</button>
-                <button class="nav-item" data-section="denial_service">Denial of Service</button>
-                <button class="nav-item" data-section="wiper">Wiper Malware</button>
-            </div>
-
-            <div class="nav-section">
-                <h3><i class="fas fa-terminal"></i> Custom Tools</h3>
-                <button class="nav-item" data-section="payload_builder">Payload Builder</button>
-                <button class="nav-item" data-section="encoder">Encoder/Decoder</button>
-                <button class="nav-item" data-section="shellcode_gen">Shellcode Generator</button>
-                <button class="nav-item" data-section="reverse_shell">Reverse Shell Generator</button>
-            </div>
-        </nav>
-
-        <!-- Main Content -->
-        <main class="main-content" id="mainContent">
-            <!-- Search and Filter -->
-            <div class="search-container">
-                <div class="search-box">
-                    <div class="search-input-container">
-                        <i class="fas fa-search"></i>
-                        <input type="text" id="searchInput" placeholder="Search payloads, techniques, or MITRE ATT&CK IDs...">
-                    </div>
-                    <button class="search-filter" id="filterBtn">
-                        <i class="fas fa-filter"></i>
-                        Filters
-                    </button>
-                    <button class="search-clear" id="clearBtn">
-                        <i class="fas fa-times"></i>
-                        Clear
-                    </button>
+                <div class="nav-section">
+                    <h3>Core Platforms</h3>
+                    <ul>
+                        <li class="nav-item active" data-category="windows">
+                            <i class="fab fa-windows"></i>
+                            <span>Windows</span>
+                            <div class="nav-badge">47</div>
+                        </li>
+                        <li class="nav-item" data-category="linux">
+                            <i class="fab fa-linux"></i>
+                            <span>Linux</span>
+                            <div class="nav-badge">32</div>
+                        </li>
+                        <li class="nav-item" data-category="unix">
+                            <i class="fas fa-terminal"></i>
+                            <span>Unix</span>
+                            <div class="nav-badge">18</div>
+                        </li>
+                        <li class="nav-item" data-category="macos">
+                            <i class="fab fa-apple"></i>
+                            <span>macOS</span>
+                            <div class="nav-badge">25</div>
+                        </li>
+                    </ul>
                 </div>
-            </div>
 
-            <!-- Filter Panel -->
-            <div class="filter-panel" id="filterPanel">
-                <div class="filter-header">
-                    <h3>Advanced Filters</h3>
-                    <button class="btn-icon" onclick="app.toggleFilters()">
-                        <i class="fas fa-times"></i>
-                    </button>
+                <div class="nav-section">
+                    <h3>Web & Mobile</h3>
+                    <ul>
+                        <li class="nav-item" data-category="web">
+                            <i class="fas fa-globe"></i>
+                            <span>Web Exploits</span>
+                            <div class="nav-badge">41</div>
+                        </li>
+                        <li class="nav-item" data-category="mobile">
+                            <i class="fas fa-mobile-alt"></i>
+                            <span>Mobile</span>
+                            <div class="nav-badge">29</div>
+                        </li>
+                        <li class="nav-item" data-category="api">
+                            <i class="fas fa-code"></i>
+                            <span>API Exploits</span>
+                            <div class="nav-badge">15</div>
+                        </li>
+                    </ul>
                 </div>
-                <div class="filter-content">
-                    <div class="filter-group">
-                        <label>Platform:</label>
-                        <div class="filter-options platform-filters">
-                            <label class="filter-option">
-                                <input type="checkbox" value="windows" checked>
-                                <span class="checkmark"></span>
-                                <i class="fab fa-windows"></i> Windows
-                            </label>
-                            <label class="filter-option">
-                                <input type="checkbox" value="linux" checked>
-                                <span class="checkmark"></span>
-                                <i class="fab fa-linux"></i> Linux
-                            </label>
-                            <label class="filter-option">
-                                <input type="checkbox" value="unix" checked>
-                                <span class="checkmark"></span>
-                                <i class="fas fa-server"></i> Unix
-                            </label>
-                            <label class="filter-option">
-                                <input type="checkbox" value="macos" checked>
-                                <span class="checkmark"></span>
-                                <i class="fab fa-apple"></i> macOS
-                            </label>
-                        </div>
-                    </div>
-                    <div class="filter-group">
-                        <label>Complexity:</label>
-                        <div class="filter-options complexity-filters">
-                            <label class="filter-option">
-                                <input type="checkbox" value="basic" checked>
-                                <span class="checkmark"></span>
-                                Basic
-                            </label>
-                            <label class="filter-option">
-                                <input type="checkbox" value="intermediate" checked>
-                                <span class="checkmark"></span>
-                                Intermediate
-                            </label>
-                            <label class="filter-option">
-                                <input type="checkbox" value="advanced" checked>
-                                <span class="checkmark"></span>
-                                Advanced
-                            </label>
-                            <label class="filter-option">
-                                <input type="checkbox" value="expert" checked>
-                                <span class="checkmark"></span>
-                                Expert
-                            </label>
-                        </div>
-                    </div>
-                    <div class="filter-group">
-                        <label>Type:</label>
-                        <div class="filter-options type-filters">
-                            <label class="filter-option">
-                                <input type="checkbox" value="powershell" checked>
-                                <span class="checkmark"></span>
-                                PowerShell
-                            </label>
-                            <label class="filter-option">
-                                <input type="checkbox" value="bash" checked>
-                                <span class="checkmark"></span>
-                                Bash
-                            </label>
-                            <label class="filter-option">
-                                <input type="checkbox" value="cmd" checked>
-                                <span class="checkmark"></span>
-                                CMD
-                            </label>
-                            <label class="filter-option">
-                                <input type="checkbox" value="python" checked>
-                                <span class="checkmark"></span>
-                                Python
-                            </label>
-                            <label class="filter-option">
-                                <input type="checkbox" value="c" checked>
-                                <span class="checkmark"></span>
-                                C/C++
-                            </label>
-                        </div>
-                    </div>
-                </div>
-            </div>
 
-            <!-- Content Sections -->
-            <div class="content-sections">
-                <!-- Dynamic content will be generated by JavaScript -->
-            </div>
-        </main>
+                <div class="nav-section">
+                    <h3>Advanced Platforms</h3>
+                    <ul>
+                        <li class="nav-item" data-category="embedded">
+                            <i class="fas fa-microchip"></i>
+                            <span>Embedded</span>
+                            <div class="nav-badge">22</div>
+                        </li>
+                        <li class="nav-item" data-category="container">
+                            <i class="fab fa-docker"></i>
+                            <span>Containers</span>
+                            <div class="nav-badge">18</div>
+                        </li>
+                        <li class="nav-item" data-category="cloud">
+                            <i class="fas fa-cloud"></i>
+                            <span>Cloud</span>
+                            <div class="nav-badge">35</div>
+                        </li>
+                        <li class="nav-item" data-category="iot">
+                            <i class="fas fa-wifi"></i>
+                            <span>IoT Devices</span>
+                            <div class="nav-badge">27</div>
+                        </li>
+                        <li class="nav-item" data-category="blockchain">
+                            <i class="fab fa-bitcoin"></i>
+                            <span>Blockchain</span>
+                            <div class="nav-badge">12</div>
+                        </li>
+                        <li class="nav-item" data-category="ai_ml">
+                            <i class="fas fa-brain"></i>
+                            <span>AI/ML</span>
+                            <div class="nav-badge">9</div>
+                        </li>
+                    </ul>
+                </div>
 
-        <!-- Output Panel -->
-        <aside class="output-panel" id="outputPanel">
-            <div class="panel-header">
-                <h3><i class="fas fa-code"></i> Generated Payload</h3>
-                <div class="panel-actions">
-                    <button class="btn-icon" onclick="app.copyToClipboard()" title="Copy to Clipboard">
-                        <i class="fas fa-copy"></i>
-                    </button>
-                    <button class="btn-icon" onclick="app.downloadPayload()" title="Download">
-                        <i class="fas fa-download"></i>
-                    </button>
-                    <button class="btn-icon" onclick="app.sharePayload()" title="Share">
-                        <i class="fas fa-share"></i>
-                    </button>
-                    <button class="btn-icon" onclick="app.closeOutput()" title="Close">
-                        <i class="fas fa-times"></i>
-                    </button>
+                <div class="nav-section">
+                    <h3>Exploitation</h3>
+                    <ul>
+                        <li class="nav-item" data-category="exploits">
+                            <i class="fas fa-bug"></i>
+                            <span>Exploits</span>
+                            <div class="nav-badge">89</div>
+                        </li>
+                        <li class="nav-item" data-category="kernel">
+                            <i class="fas fa-cog"></i>
+                            <span>Kernel</span>
+                            <div class="nav-badge">31</div>
+                        </li>
+                        <li class="nav-item" data-category="network">
+                            <i class="fas fa-network-wired"></i>
+                            <span>Network</span>
+                            <div class="nav-badge">56</div>
+                        </li>
+                        <li class="nav-item" data-category="social">
+                            <i class="fas fa-users"></i>
+                            <span>Social Eng.</span>
+                            <div class="nav-badge">43</div>
+                        </li>
+                        <li class="nav-item" data-category="physical">
+                            <i class="fas fa-key"></i>
+                            <span>Physical</span>
+                            <div class="nav-badge">16</div>
+                        </li>
+                    </ul>
                 </div>
-            </div>
-            <div class="output-content">
-                <div class="output-tabs">
-                    <button class="output-tab active" data-tab="code">Code</button>
-                    <button class="output-tab" data-tab="metadata">Metadata</button>
-                    <button class="output-tab" data-tab="history">History</button>
+
+                <div class="nav-section">
+                    <h3>MITRE ATT&CK</h3>
+                    <ul>
+                        <li class="nav-item" data-category="mitre">
+                            <i class="fas fa-crosshairs"></i>
+                            <span>Tactics & Techniques</span>
+                            <div class="nav-badge">14</div>
+                        </li>
+                    </ul>
                 </div>
-                <div class="tab-content active" id="codeTab">
-                    <div class="code-block">
-                        <div class="code-header">
-                            <span class="code-language" id="codeLanguage">PowerShell</span>
-                            <span class="code-size" id="codeSize">0 bytes</span>
-                        </div>
-                        <pre><code id="payloadOutput" class="hljs"></code></pre>
-                    </div>
+
+                <div class="nav-section">
+                    <h3>Tools & Utilities</h3>
+                    <ul>
+                        <li class="nav-item" data-category="encoder">
+                            <i class="fas fa-code"></i>
+                            <span>Encoder</span>
+                        </li>
+                        <li class="nav-item" data-category="obfuscator">
+                            <i class="fas fa-eye-slash"></i>
+                            <span>Obfuscator</span>
+                        </li>
+                        <li class="nav-item" data-category="scanner">
+                            <i class="fas fa-search"></i>
+                            <span>Scanner</span>
+                        </li>
+                        <li class="nav-item" data-category="history">
+                            <i class="fas fa-history"></i>
+                            <span>History</span>
+                        </li>
+                    </ul>
                 </div>
-                <div class="tab-content" id="metadataTab">
-                    <div class="metadata-content" id="metadataContent"></div>
-                </div>
-                <div class="tab-content" id="historyTab">
-                    <div class="history-content" id="historyContent"></div>
-                </div>
-            </div>
+            </nav>
         </aside>
 
-        <!-- Settings Modal -->
-        <div class="modal" id="settingsModal">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h3><i class="fas fa-cog"></i> Settings</h3>
-                    <button class="btn-icon" onclick="app.closeSettings()">
-                        <i class="fas fa-times"></i>
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="content-header">
+                <div class="breadcrumb">
+                    <span class="breadcrumb-item active">Windows Payloads</span>
+                    <div class="breadcrumb-stats">
+                        <span class="stat-item">
+                            <i class="fas fa-chart-line"></i>
+                            47 Payloads
+                        </span>
+                        <span class="stat-item">
+                            <i class="fas fa-clock"></i>
+                            Last updated: 2 hours ago
+                        </span>
+                    </div>
+                </div>
+                <div class="content-actions">
+                    <button class="btn btn-secondary" id="clearAll">
+                        <i class="fas fa-trash"></i>
+                        <span>Clear All</span>
+                    </button>
+                    <button class="btn btn-secondary" id="importPayloads">
+                        <i class="fas fa-upload"></i>
+                        <span>Import</span>
+                    </button>
+                    <button class="btn btn-primary" id="exportPayloads">
+                        <i class="fas fa-download"></i>
+                        <span>Export</span>
                     </button>
                 </div>
-                <div class="modal-body">
-                    <div class="settings-section">
-                        <h4>General Settings</h4>
-                        <label class="setting-item">
-                            <span>Auto-copy generated payloads</span>
-                            <input type="checkbox" id="autoCopy">
-                        </label>
-                        <label class="setting-item">
-                            <span>Show payload warnings</span>
-                            <input type="checkbox" id="showWarnings" checked>
-                        </label>
-                        <label class="setting-item">
-                            <span>Enable syntax highlighting</span>
-                            <input type="checkbox" id="syntaxHighlight" checked>
-                        </label>
+            </div>
+
+            <!-- Quick Actions Bar -->
+            <div class="quick-actions">
+                <button class="quick-action" data-action="quick-reverse">
+                    <i class="fas fa-bolt"></i>
+                    <span>Quick Reverse Shell</span>
+                </button>
+                <button class="quick-action" data-action="quick-meterpreter">
+                    <i class="fas fa-rocket"></i>
+                    <span>Meterpreter</span>
+                </button>
+                <button class="quick-action" data-action="quick-powershell">
+                    <i class="fab fa-microsoft"></i>
+                    <span>PowerShell</span>
+                </button>
+                <button class="quick-action" data-action="quick-python">
+                    <i class="fab fa-python"></i>
+                    <span>Python</span>
+                </button>
+            </div>
+
+            <!-- Payload Generation Interface -->
+            <div class="payload-interface">
+                <div class="generator-grid">
+                    <!-- Configuration Panel -->
+                    <div class="config-panel">
+                        <div class="panel-header">
+                            <h3><i class="fas fa-cogs"></i> Configuration</h3>
+                            <button class="panel-toggle" data-panel="config">
+                                <i class="fas fa-chevron-up"></i>
+                            </button>
+                        </div>
+                        <div class="panel-content">
+                            <div class="config-tabs">
+                                <button class="config-tab active" data-tab="basic">Basic</button>
+                                <button class="config-tab" data-tab="advanced">Advanced</button>
+                                <button class="config-tab" data-tab="evasion">Evasion</button>
+                            </div>
+
+                            <div class="config-content">
+                                <div class="config-pane active" id="basic">
+                                    <div class="form-group">
+                                        <label>Target IP:</label>
+                                        <div class="input-group">
+                                            <input type="text" id="targetIP" placeholder="192.168.1.100" value="127.0.0.1">
+                                            <button class="input-btn" id="detectIP">
+                                                <i class="fas fa-search"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Target Port:</label>
+                                        <input type="number" id="targetPort" placeholder="4444" value="4444" min="1" max="65535">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Payload Type:</label>
+                                        <select id="payloadType">
+                                            <option value="reverse_shell">Reverse Shell</option>
+                                            <option value="bind_shell">Bind Shell</option>
+                                            <option value="meterpreter">Meterpreter</option>
+                                            <option value="empire">Empire Agent</option>
+                                            <option value="covenant">Covenant Grunt</option>
+                                            <option value="cobalt_strike">Cobalt Strike</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Architecture:</label>
+                                        <select id="architecture">
+                                            <option value="x64">x64</option>
+                                            <option value="x86">x86</option>
+                                            <option value="arm">ARM</option>
+                                            <option value="arm64">ARM64</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="config-pane" id="advanced">
+                                    <div class="form-group">
+                                        <label>Encoding:</label>
+                                        <select id="encoding">
+                                            <option value="none">None</option>
+                                            <option value="base64">Base64</option>
+                                            <option value="hex">Hex</option>
+                                            <option value="url">URL Encode</option>
+                                            <option value="unicode">Unicode</option>
+                                            <option value="custom">Custom</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Encryption:</label>
+                                        <select id="encryption">
+                                            <option value="none">None</option>
+                                            <option value="aes256">AES-256</option>
+                                            <option value="chacha20">ChaCha20</option>
+                                            <option value="xor">XOR</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Communication Protocol:</label>
+                                        <select id="protocol">
+                                            <option value="tcp">TCP</option>
+                                            <option value="udp">UDP</option>
+                                            <option value="http">HTTP</option>
+                                            <option value="https">HTTPS</option>
+                                            <option value="dns">DNS</option>
+                                            <option value="icmp">ICMP</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="config-pane" id="evasion">
+                                    <div class="form-group checkbox-group">
+                                        <label>
+                                            <input type="checkbox" id="obfuscate">
+                                            <span class="checkmark"></span>
+                                            Enable Obfuscation
+                                        </label>
+                                    </div>
+                                    <div class="form-group checkbox-group">
+                                        <label>
+                                            <input type="checkbox" id="persistence">
+                                            <span class="checkmark"></span>
+                                            Add Persistence
+                                        </label>
+                                    </div>
+                                    <div class="form-group checkbox-group">
+                                        <label>
+                                            <input type="checkbox" id="antivm">
+                                            <span class="checkmark"></span>
+                                            Anti-VM Techniques
+                                        </label>
+                                    </div>
+                                    <div class="form-group checkbox-group">
+                                        <label>
+                                            <input type="checkbox" id="amsiBypass">
+                                            <span class="checkmark"></span>
+                                            AMSI Bypass
+                                        </label>
+                                    </div>
+                                    <div class="form-group checkbox-group">
+                                        <label>
+                                            <input type="checkbox" id="etwBypass">
+                                            <span class="checkmark"></span>
+                                            ETW Bypass
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="config-actions">
+                                <button class="btn btn-sm btn-secondary" id="saveConfig">
+                                    <i class="fas fa-save"></i>
+                                    Save Config
+                                </button>
+                                <button class="btn btn-sm btn-secondary" id="loadConfig">
+                                    <i class="fas fa-folder-open"></i>
+                                    Load Config
+                                </button>
+                            </div>
+                        </div>
                     </div>
-                    <div class="settings-section">
-                        <h4>Security Settings</h4>
-                        <label class="setting-item">
-                            <span>Require confirmation for dangerous payloads</span>
-                            <input type="checkbox" id="requireConfirmation" checked>
-                        </label>
-                        <label class="setting-item">
-                            <span>Log all generated payloads</span>
-                            <input type="checkbox" id="logPayloads" checked>
-                        </label>
+
+                    <!-- Payload Categories -->
+                    <div class="payload-categories">
+                        <div class="category-header">
+                            <h3>Payload Selection</h3>
+                            <div class="category-filters">
+                                <button class="filter-btn active" data-filter="all">All</button>
+                                <button class="filter-btn" data-filter="favorites">Favorites</button>
+                                <button class="filter-btn" data-filter="recent">Recent</button>
+                                <button class="filter-btn" data-filter="advanced">Advanced</button>
+                            </div>
+                        </div>
+
+                        <div class="category-tabs">
+                            <button class="tab-btn active" data-tab="shellcode">
+                                <i class="fas fa-code"></i>
+                                Shellcode
+                            </button>
+                            <button class="tab-btn" data-tab="powershell">
+                                <i class="fab fa-microsoft"></i>
+                                PowerShell
+                            </button>
+                            <button class="tab-btn" data-tab="executable">
+                                <i class="fas fa-file-code"></i>
+                                Executable
+                            </button>
+                            <button class="tab-btn" data-tab="script">
+                                <i class="fas fa-scroll"></i>
+                                Script
+                            </button>
+                            <button class="tab-btn" data-tab="webshell">
+                                <i class="fas fa-globe"></i>
+                                WebShell
+                            </button>
+                            <button class="tab-btn" data-tab="persistence">
+                                <i class="fas fa-anchor"></i>
+                                Persistence
+                            </button>
+                            <button class="tab-btn" data-tab="evasion">
+                                <i class="fas fa-mask"></i>
+                                AV Evasion
+                            </button>
+                            <button class="tab-btn" data-tab="lateral">
+                                <i class="fas fa-arrows-alt-h"></i>
+                                Lateral
+                            </button>
+                            <button class="tab-btn" data-tab="steganography">
+                                <i class="fas fa-eye-slash"></i>
+                                Steganography
+                            </button>
+                            <button class="tab-btn" data-tab="crypto">
+                                <i class="fas fa-lock"></i>
+                                Cryptographic
+                            </button>
+                        </div>
+
+                        <div class="tab-content">
+                            <div class="tab-pane active" id="shellcode">
+                                <div class="payload-grid" id="shellcodeGrid">
+                                    <!-- Payload cards will be populated by JavaScript -->
+                                </div>
+                            </div>
+                            <div class="tab-pane" id="powershell">
+                                <div class="payload-grid" id="powershellGrid">
+                                    <!-- Payload cards will be populated by JavaScript -->
+                                </div>
+                            </div>
+                            <div class="tab-pane" id="executable">
+                                <div class="payload-grid" id="executableGrid">
+                                    <!-- Payload cards will be populated by JavaScript -->
+                                </div>
+                            </div>
+                            <div class="tab-pane" id="script">
+                                <div class="payload-grid" id="scriptGrid">
+                                    <!-- Payload cards will be populated by JavaScript -->
+                                </div>
+                            </div>
+                            <div class="tab-pane" id="webshell">
+                                <div class="payload-grid" id="webshellGrid">
+                                    <!-- Payload cards will be populated by JavaScript -->
+                                </div>
+                            </div>
+                            <div class="tab-pane" id="persistence">
+                                <div class="payload-grid" id="persistenceGrid">
+                                    <!-- Payload cards will be populated by JavaScript -->
+                                </div>
+                            </div>
+                            <div class="tab-pane" id="evasion">
+                                <div class="payload-grid" id="evasionGrid">
+                                    <!-- Payload cards will be populated by JavaScript -->
+                                </div>
+                            </div>
+                            <div class="tab-pane" id="lateral">
+                                <div class="payload-grid" id="lateralGrid">
+                                    <!-- Payload cards will be populated by JavaScript -->
+                                </div>
+                            </div>
+                            <div class="tab-pane" id="steganography">
+                                <div class="payload-grid" id="steganographyGrid">
+                                    <!-- Payload cards will be populated by JavaScript -->
+                                </div>
+                            </div>
+                            <div class="tab-pane" id="crypto">
+                                <div class="payload-grid" id="cryptoGrid">
+                                    <!-- Payload cards will be populated by JavaScript -->
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="settings-section">
-                        <h4>Theme</h4>
-                        <label class="setting-item">
-                            <span>Theme preference</span>
-                            <select id="themeSelect">
-                                <option value="dark">Dark</option>
-                                <option value="light">Light</option>
-                                <option value="auto">Auto</option>
+                </div>
+
+                <!-- Output Panel -->
+                <div class="output-panel">
+                    <div class="output-header">
+                        <h3><i class="fas fa-terminal"></i> Generated Payload</h3>
+                        <div class="output-actions">
+                            <select id="outputFormat" class="format-selector">
+                                <option value="raw">Raw</option>
+                                <option value="c">C/C++</option>
+                                <option value="python">Python</option>
+                                <option value="powershell">PowerShell</option>
+                                <option value="bash">Bash</option>
                             </select>
-                        </label>
+                            <button class="btn btn-sm btn-secondary" id="copyPayload">
+                                <i class="fas fa-copy"></i>
+                                <span>Copy</span>
+                            </button>
+                            <button class="btn btn-sm btn-secondary" id="savePayload">
+                                <i class="fas fa-save"></i>
+                                <span>Save</span>
+                            </button>
+                            <button class="btn btn-sm btn-secondary" id="sharePayload">
+                                <i class="fas fa-share"></i>
+                                <span>Share</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="output-content">
+                        <div class="output-tabs">
+                            <button class="output-tab active" data-output-tab="payload">Payload</button>
+                            <button class="output-tab" data-output-tab="handler">Handler</button>
+                            <button class="output-tab" data-output-tab="analysis">Analysis</button>
+                        </div>
+                        <div class="output-body">
+                            <div class="output-pane active" id="payloadOutput">
+                                <pre id="payloadCode"><code>// Generated payload will appear here...</code></pre>
+                            </div>
+                            <div class="output-pane" id="handlerOutput">
+                                <pre id="handlerCode"><code>// Handler setup will appear here...</code></pre>
+                            </div>
+                            <div class="output-pane" id="analysisOutput">
+                                <div class="analysis-content">
+                                    <div class="analysis-section">
+                                        <h4>Payload Information</h4>
+                                        <div class="info-grid">
+                                            <div class="info-item">
+                                                <label>Size:</label>
+                                                <span id="payloadSize">0 bytes</span>
+                                            </div>
+                                            <div class="info-item">
+                                                <label>MITRE Techniques:</label>
+                                                <span id="mitreTechniques">N/A</span>
+                                            </div>
+                                            <div class="info-item">
+                                                <label>Risk Level:</label>
+                                                <span id="riskLevel" class="risk-medium">Medium</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Details Modal -->
-        <div class="modal" id="detailsModal">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h3 id="modalTitle">Payload Details</h3>
-                    <button class="btn-icon" onclick="app.closeModal()">
-                        <i class="fas fa-times"></i>
-                    </button>
+            <!-- MITRE ATT&CK Mapping Panel -->
+            <div class="mitre-panel" style="display: none;">
+                <div class="panel-header">
+                    <h3><i class="fas fa-crosshairs"></i> MITRE ATT&CK Framework</h3>
+                    <div class="mitre-filters">
+                        <select id="mitreFilter">
+                            <option value="all">All Tactics</option>
+                            <option value="initial-access">Initial Access</option>
+                            <option value="execution">Execution</option>
+                            <option value="persistence">Persistence</option>
+                            <option value="privilege-escalation">Privilege Escalation</option>
+                            <option value="defense-evasion">Defense Evasion</option>
+                            <option value="credential-access">Credential Access</option>
+                            <option value="discovery">Discovery</option>
+                            <option value="lateral-movement">Lateral Movement</option>
+                            <option value="collection">Collection</option>
+                            <option value="exfiltration">Exfiltration</option>
+                            <option value="impact">Impact</option>
+                        </select>
+                    </div>
                 </div>
-                <div class="modal-body" id="modalBody">
-                    <!-- Dynamic content will be inserted here -->
-                </div>
-            </div>
-        </div>
-
-        <!-- Loading Indicator -->
-        <div class="loading-indicator" id="loadingIndicator">
-            <div class="loading-content">
-                <div class="spinner"></div>
-                <span id="loadingText">Loading...</span>
-            </div>
-        </div>
-
-        <!-- Notification Container -->
-        <div class="notification-container" id="notificationContainer"></div>
-
-        <!-- Footer -->
-        <footer class="footer">
-            <div class="footer-content">
-                <div class="footer-info">
-                    <span>Developed by <strong>0x0806</strong></span>
-                    <span class="separator">|</span>
-                    <span>Educational & Research Use Only</span>
-                    <span class="separator">|</span>
-                    <span>Version 2.0.0</span>
-                </div>
-                <div class="footer-links">
-                    <a href="#" class="footer-link">
-                        <i class="fas fa-book"></i> Documentation
-                    </a>
-                    <a href="#" class="footer-link">
-                        <i class="fab fa-github"></i> GitHub
-                    </a>
-                    <a href="#" class="footer-link">
-                        <i class="fas fa-shield-alt"></i> Security Guidelines
-                    </a>
-                    <a href="#" class="footer-link">
-                        <i class="fas fa-bug"></i> Report Issues
-                    </a>
+                <div class="mitre-grid" id="mitreGrid">
+                    <!-- MITRE cards will be populated by JavaScript -->
                 </div>
             </div>
-        </footer>
+        </main>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-spinner">
+            <div class="spinner"></div>
+            <p>Generating payload...</p>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <div class="modal" id="advancedModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Advanced Payload Settings</h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="advanced-settings">
+                    <div class="setting-group">
+                        <label>Custom Shellcode:</label>
+                        <textarea id="customShellcode" placeholder="Enter custom shellcode..."></textarea>
+                    </div>
+                    <div class="setting-group">
+                        <label>Injection Technique:</label>
+                        <select id="injectionTechnique">
+                            <option value="process_injection">Process Injection</option>
+                            <option value="dll_injection">DLL Injection</option>
+                            <option value="hollowing">Process Hollowing</option>
+                            <option value="atom_bombing">Atom Bombing</option>
+                            <option value="manual_mapping">Manual DLL Mapping</option>
+                            <option value="reflective_dll">Reflective DLL Loading</option>
+                        </select>
+                    </div>
+                    <div class="setting-group">
+                        <label>Evasion Techniques:</label>
+                        <div class="checkbox-grid">
+                            <label><input type="checkbox" id="heavensGate"> Heaven's Gate</label>
+                            <label><input type="checkbox" id="syscallStubbing"> Syscall Stubbing</label>
+                            <label><input type="checkbox" id="ntdllUnhooking"> NTDLL Unhooking</label>
+                            <label><input type="checkbox" id="processHollowing"> Process Hollowing</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary modal-cancel">Cancel</button>
+                <button class="btn btn-primary modal-apply">Apply Settings</button>
+            </div>
+        </div>
     </div>
 
     <script src="script.js"></script>
 </body>
 </html>
-
