@@ -22,10 +22,17 @@ class CybersecurityArsenal {
     }
 
     init() {
-        this.setupEventListeners();
-        this.loadSection('basic');
-        this.updateTheme();
-        this.updateStats();
+        try {
+            this.setupEventListeners();
+            this.loadSection('basic');
+            this.updateTheme();
+            this.updateStats();
+            this.initializeTabSwitching();
+            console.log('App initialized successfully');
+        } catch (error) {
+            console.error('App initialization failed:', error);
+            this.showNotification('Application failed to load. Please refresh the page.', 'error');
+        }
     }
 
     initializePayloads() {
@@ -1135,50 +1142,64 @@ Write-Host "\`n[CRITICAL] Unauthorized data exfiltration is illegal!" -Foregroun
     }
 
     setupEventListeners() {
-        // Navigation
-        document.querySelectorAll('.nav-item').forEach(item => {
-            item.addEventListener('click', (e) => {
-                const section = e.target.dataset.section;
-                if (section) {
-                    this.loadSection(section);
+        try {
+            // Navigation
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.addEventListener('click', (e) => {
+                    const section = e.target.dataset.section;
+                    if (section) {
+                        this.loadSection(section);
+                    }
+                });
+            });
+
+            // Search
+            const searchInput = document.getElementById('searchInput');
+            if (searchInput) {
+                searchInput.addEventListener('input', (e) => this.performSearch(e.target.value));
+            }
+
+            // Filter toggle
+            const filterBtn = document.getElementById('filterBtn');
+            if (filterBtn) {
+                filterBtn.addEventListener('click', () => this.toggleFilters());
+            }
+
+            // Theme toggle
+            const themeToggle = document.getElementById('themeToggle');
+            if (themeToggle) {
+                themeToggle.addEventListener('click', () => this.toggleTheme());
+            }
+
+            // AI search
+            const aiSearchBtn = document.getElementById('aiSearchBtn');
+            if (aiSearchBtn) {
+                aiSearchBtn.addEventListener('click', () => this.performAISearch());
+            }
+
+            // Settings
+            const settingsBtn = document.getElementById('settingsBtn');
+            if (settingsBtn) {
+                settingsBtn.addEventListener('click', () => this.openSettings());
+            }
+
+            // Mobile menu toggle
+            const menuToggle = document.getElementById('menuToggle');
+            if (menuToggle) {
+                menuToggle.addEventListener('click', () => this.toggleMobileMenu());
+            }
+
+            // Modal close handlers
+            document.addEventListener('click', (e) => {
+                if (e.target.classList.contains('modal')) {
+                    this.closeModal();
+                    this.closeSettings();
                 }
             });
-        });
 
-        // Search
-        const searchInput = document.getElementById('searchInput');
-        if (searchInput) {
-            searchInput.addEventListener('input', (e) => this.performSearch(e.target.value));
-        }
-
-        // Filter toggle
-        const filterBtn = document.getElementById('filterBtn');
-        if (filterBtn) {
-            filterBtn.addEventListener('click', () => this.toggleFilters());
-        }
-
-        // Theme toggle
-        const themeToggle = document.getElementById('themeToggle');
-        if (themeToggle) {
-            themeToggle.addEventListener('click', () => this.toggleTheme());
-        }
-
-        // AI search
-        const aiSearchBtn = document.getElementById('aiSearchBtn');
-        if (aiSearchBtn) {
-            aiSearchBtn.addEventListener('click', () => this.performAISearch());
-        }
-
-        // Settings
-        const settingsBtn = document.getElementById('settingsBtn');
-        if (settingsBtn) {
-            settingsBtn.addEventListener('click', () => this.openSettings());
-        }
-
-        // Mobile menu toggle
-        const menuToggle = document.getElementById('menuToggle');
-        if (menuToggle) {
-            menuToggle.addEventListener('click', () => this.toggleMobileMenu());
+            console.log('Event listeners setup complete');
+        } catch (error) {
+            console.error('Failed to setup event listeners:', error);
         }
     }
 
@@ -1193,24 +1214,33 @@ Write-Host "\`n[CRITICAL] Unauthorized data exfiltration is illegal!" -Foregroun
     }
 
     generateSectionContent(sectionId) {
-        const contentSections = document.querySelector('.content-sections');
-        if (!contentSections) return;
+        try {
+            const contentSections = document.querySelector('.content-sections');
+            if (!contentSections) {
+                console.error('Content sections container not found');
+                return;
+            }
 
-        contentSections.innerHTML = '';
+            contentSections.innerHTML = '';
 
-        const section = document.createElement('div');
-        section.className = 'content-section active';
-        section.id = sectionId;
+            const section = document.createElement('div');
+            section.className = 'content-section active';
+            section.id = sectionId;
 
-        const sectionHeader = this.createSectionHeader(sectionId);
-        const payloadGrid = document.createElement('div');
-        payloadGrid.className = 'payload-grid';
+            const sectionHeader = this.createSectionHeader(sectionId);
+            const payloadGrid = document.createElement('div');
+            payloadGrid.className = 'payload-grid';
 
-        section.appendChild(sectionHeader);
-        section.appendChild(payloadGrid);
-        contentSections.appendChild(section);
+            section.appendChild(sectionHeader);
+            section.appendChild(payloadGrid);
+            contentSections.appendChild(section);
 
-        this.populateSection(sectionId, payloadGrid);
+            this.populateSection(sectionId, payloadGrid);
+            console.log(`Section ${sectionId} loaded successfully`);
+        } catch (error) {
+            console.error('Failed to generate section content:', error);
+            this.showNotification('Failed to load section content', 'error');
+        }
     }
 
     createSectionHeader(sectionId) {
@@ -1560,6 +1590,31 @@ Write-Host "\`n[CRITICAL] Unauthorized data exfiltration is illegal!" -Foregroun
         }
     }
 
+    initializeTabSwitching() {
+        // Initialize output panel tabs
+        const outputTabs = document.querySelectorAll('.output-tab');
+        const tabContents = document.querySelectorAll('.tab-content');
+
+        outputTabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                const targetTab = tab.dataset.tab;
+                
+                // Remove active class from all tabs and contents
+                outputTabs.forEach(t => t.classList.remove('active'));
+                tabContents.forEach(content => content.classList.remove('active'));
+                
+                // Add active class to clicked tab
+                tab.classList.add('active');
+                
+                // Show corresponding content
+                const targetContent = document.getElementById(targetTab + 'Tab');
+                if (targetContent) {
+                    targetContent.classList.add('active');
+                }
+            });
+        });
+    }
+
     beautifyCode() {
         this.showNotification('Code beautification applied!', 'success');
     }
@@ -1583,9 +1638,55 @@ Write-Host "\`n[CRITICAL] Unauthorized data exfiltration is illegal!" -Foregroun
     generateBulkPayloads() {
         this.showNotification('Bulk generation started!', 'info');
     }
+
+    toggleAI() {
+        const panel = document.getElementById('aiPanel');
+        if (panel) {
+            panel.classList.toggle('active');
+        }
+    }
+
+    toggleFilters() {
+        const panel = document.getElementById('filterPanel');
+        if (panel) {
+            panel.classList.toggle('active');
+        }
+    }
 }
 
 // Initialize the application
 document.addEventListener('DOMContentLoaded', () => {
-    window.app = new CybersecurityArsenal();
+    try {
+        console.log('DOM loaded, initializing application...');
+        window.app = new CybersecurityArsenal();
+        
+        // Additional initialization after a brief delay to ensure all elements are ready
+        setTimeout(() => {
+            if (window.app && typeof window.app.updateStats === 'function') {
+                window.app.updateStats();
+            }
+        }, 100);
+        
+    } catch (error) {
+        console.error('Failed to initialize application:', error);
+        
+        // Show error message to user
+        const errorDiv = document.createElement('div');
+        errorDiv.innerHTML = `
+            <div style="
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: #ef4444;
+                color: white;
+                padding: 16px;
+                border-radius: 8px;
+                z-index: 9999;
+                max-width: 400px;
+            ">
+                <strong>Error:</strong> Failed to load application. Please refresh the page.
+            </div>
+        `;
+        document.body.appendChild(errorDiv);
+    }
 });
