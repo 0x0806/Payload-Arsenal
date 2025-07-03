@@ -801,8 +801,7 @@ class PayloadArsenal {
 
     getSectionMap() {
         return {
-            basic: ['sysinfo', 'processes', 'services', 'network'],
-            filesystem: ['listfiles', 'findfiles', 'credentials_search'],
+            basic: ['sysinfo', 'processes', 'services', 'network'],            filesystem: ['listfiles', 'findfiles', 'credentials_search'],
             security: ['currentuser', 'localusers', 'groups', 'privileges'],
             advanced: ['encoded', 'oneliner', 'registry', 'eventlogs'],
             edr: ['amsibypass', 'etw_bypass', 'scriptblock_bypass', 'constrained_bypass', 'reflective_loading', 'obfuscated_invoke'],
@@ -867,52 +866,54 @@ class PayloadArsenal {
             });
         });
 
-        // Show output panel
-        const outputPanel = document.getElementById('outputPanel');
-        if (outputPanel) {
-            outputPanel.classList.add('active');
+            // Show output panel
+            const outputPanel = document.getElementById('outputPanel');
+            if (outputPanel) {
+                outputPanel.classList.add('active');
 
-            const payloadOutput = document.getElementById('payloadOutput');
-            const description = document.getElementById('description');
-            const metadataElement = document.getElementById('metadata');
+                const payloadOutput = document.getElementById('payloadOutput');
+                const description = document.getElementById('description');
+                const metadataElement = document.getElementById('metadata');
 
-            if (payloadOutput) payloadOutput.textContent = lineOutput;
-            if (description) description.textContent = `${this.formatTitle(sectionId)} - All techniques as lines (${sectionPayloads.length} commands)`;
+                if (payloadOutput) payloadOutput.textContent = lineOutput;
+                if (description) description.textContent = `${this.formatTitle(sectionId)} - All techniques as lines (${sectionPayloads.length} commands)`;
 
-            if (metadataElement) {
-                metadataElement.innerHTML = `
-                    <div class="section-metadata">
-                        <div class="metadata-item">
-                            <strong>Section:</strong> ${this.formatTitle(sectionId)}
+                if (metadataElement) {
+                    metadataElement.innerHTML = `
+                        <div class="section-metadata">
+                            <div class="metadata-item">
+                                <strong>Section:</strong> ${this.formatTitle(sectionId)}
+                            </div>
+                            <div class="metadata-item">
+                                <strong>Total Commands:</strong> ${sectionPayloads.length}
+                            </div>
+                            <div class="metadata-item">
+                                <strong>Format:</strong> Multi-line with headers
+                            </div>
+                            <div class="metadata-item">
+                                <strong>Generated:</strong> ${new Date().toLocaleString()}
+                            </div>
+                            <div class="metadata-item">
+                                <strong>Total Length:</strong> ${lineOutput.length} characters
+                            </div>
+                            <div class="command-list">
+                                ${metadata.map((item, index) => `
+                                    <div class="command-item">
+                                        <span class="line-number">Command ${index + 1}:</span>
+                                        <span class="name">${item.name}</span>
+                                        <span class="complexity-${item.complexity}">${item.complexity}</span>
+                                    </div>
+                                `).join('')}
+                            </div>
                         </div>
-                        <div class="metadata-item">
-                            <strong>Total Commands:</strong> ${sectionPayloads.length}
-                        </div>
-                        <div class="metadata-item">
-                            <strong>Format:</strong> One command per line
-                        </div>
-                        <div class="metadata-item">
-                            <strong>Generated:</strong> ${new Date().toLocaleString()}
-                        </div>
-                        <div class="metadata-item">
-                            <strong>Total Length:</strong> ${lineOutput.length} characters
-                        </div>
-                        <div class="command-list">
-                            ${metadata.map((item, index) => `
-                                <div class="command-item">
-                                    <span class="line-number">Line ${index + 1}:</span>
-                                    <span class="name">${item.name}</span>
-                                    <span class="complexity-${item.complexity}">${item.complexity}</span>
-                                </div>
-                            `).join('')}
-                        </div>
-                    </div>
-                `;
+                    `;
+                }
+
+                this.applySyntaxHighlighting();
+                this.showNotification(`Generated ${sectionPayloads.length} ${this.formatTitle(sectionId)} commands with headers!`, 'success');
             }
 
-            this.applySyntaxHighlighting();
-            this.showNotification(`Generated ${sectionPayloads.length} ${this.formatTitle(sectionId)} commands as lines!`, 'success');
-        }
+        }, 500);
     }
 
     selectAllInSection(sectionId) {
@@ -1104,7 +1105,7 @@ class PayloadArsenal {
         // Find payloads with same category or complexity
         Object.entries(payloads).forEach(([key, payload]) => {
             if (related.length >= maxRelated) return;
-            
+
             if (key !== mainType && 
                 (payload.category === mainPayload.category || 
                  payload.complexity === mainPayload.complexity ||
@@ -1117,7 +1118,7 @@ class PayloadArsenal {
         if (related.length < maxRelated) {
             Object.entries(payloads).forEach(([key, payload]) => {
                 if (related.length >= maxRelated) return;
-                
+
                 if (key !== mainType && 
                     payload.platform === mainPayload.platform &&
                     !related.find(([relatedKey]) => relatedKey === key)) {
@@ -1681,7 +1682,7 @@ class PayloadArsenal {
         document.body.removeChild(textArea);
     }
 
-    downloadPayload() {
+    downloadPayload(){
         const output = document.getElementById('payloadOutput');
         if (!output) return;
 
