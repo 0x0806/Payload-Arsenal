@@ -7,6 +7,8 @@
     <title>Payload Arsenal | Advanced Cybersecurity Research Platform</title>
     <meta name="description" content="Advanced cybersecurity research platform for ethical security testing and penetration testing education.">
     <meta name="author" content="0x0806">
+    <meta name="keywords" content="cybersecurity, penetration testing, payloads, security research, ethical hacking">
+    <meta name="robots" content="noindex, nofollow">
     <link href="style.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;400;500;600&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -18,7 +20,7 @@
         <header class="header">
             <div class="header-content">
                 <div class="brand">
-                    <div class="logo">
+                    <div class="logo" role="img" aria-label="Payload Arsenal Logo">
                         <i class="fas fa-shield-virus"></i>
                     </div>
                     <div class="brand-text">
@@ -27,118 +29,119 @@
                     </div>
                 </div>
                 <div class="header-actions">
-                    <button class="btn-icon" id="themeToggle" title="Toggle Theme">
+                    <button class="btn-icon" id="themeToggle" title="Toggle Theme" aria-label="Toggle dark/light theme">
                         <i class="fas fa-moon"></i>
                     </button>
-                    <button class="btn-icon" id="menuToggle" title="Menu">
+                    <button class="btn-icon" id="menuToggle" title="Menu" aria-label="Toggle navigation menu">
                         <i class="fas fa-bars"></i>
                     </button>
                 </div>
             </div>
-            <div class="security-notice">
-                <i class="fas fa-exclamation-triangle"></i>
+            <div class="security-notice" role="alert">
+                <i class="fas fa-exclamation-triangle" aria-hidden="true"></i>
                 <span>For Authorized Security Research Only - Use Responsibly</span>
             </div>
         </header>
 
         <!-- Sidebar Navigation -->
-        <nav class="sidebar" id="sidebar">
+        <nav class="sidebar" id="sidebar" role="navigation" aria-label="Main navigation">
             <div class="nav-section">
-                <h3><i class="fas fa-info-circle"></i> Basic Info</h3>
-                <button class="nav-item active" data-section="basic">System Information</button>
+                <h3><i class="fas fa-info-circle" aria-hidden="true"></i> Basic Info</h3>
+                <button class="nav-item active" data-section="basic" aria-pressed="true">System Information</button>
             </div>
             <div class="nav-section">
-                <h3><i class="fas fa-folder"></i> File System</h3>
-                <button class="nav-item" data-section="filesystem">File Operations</button>
+                <h3><i class="fas fa-folder" aria-hidden="true"></i> File System</h3>
+                <button class="nav-item" data-section="filesystem" aria-pressed="false">File Operations</button>
             </div>
             <div class="nav-section">
-                <h3><i class="fas fa-users"></i> User & Security</h3>
-                <button class="nav-item" data-section="security">Security Info</button>
+                <h3><i class="fas fa-users" aria-hidden="true"></i> User & Security</h3>
+                <button class="nav-item" data-section="security" aria-pressed="false">Security Info</button>
             </div>
             <div class="nav-section">
-                <h3><i class="fas fa-code"></i> Advanced</h3>
-                <button class="nav-item" data-section="advanced">Advanced Techniques</button>
+                <h3><i class="fas fa-code" aria-hidden="true"></i> Advanced</h3>
+                <button class="nav-item" data-section="advanced" aria-pressed="false">Advanced Techniques</button>
             </div>
             <div class="nav-section">
-                <h3><i class="fas fa-shield-alt"></i> EDR Bypass</h3>
-                <button class="nav-item" data-section="edr">EDR Evasion</button>
+                <h3><i class="fas fa-shield-alt" aria-hidden="true"></i> EDR Bypass</h3>
+                <button class="nav-item" data-section="edr" aria-pressed="false">EDR Evasion</button>
             </div>
             <div class="nav-section">
-                <h3><i class="fas fa-brain"></i> Memory</h3>
-                <button class="nav-item" data-section="memory">Memory Manipulation</button>
+                <h3><i class="fas fa-brain" aria-hidden="true"></i> Memory</h3>
+                <button class="nav-item" data-section="memory" aria-pressed="false">Memory Manipulation</button>
             </div>
             <div class="nav-section">
-                <h3><i class="fas fa-network-wired"></i> Network</h3>
-                <button class="nav-item" data-section="network">Covert Channels</button>
+                <h3><i class="fas fa-network-wired" aria-hidden="true"></i> Network</h3>
+                <button class="nav-item" data-section="network" aria-pressed="false">Covert Channels</button>
             </div>
             <div class="nav-section">
-                <h3><i class="fas fa-history"></i> Persistence</h3>
-                <button class="nav-item" data-section="persistence">Advanced Persistence</button>
+                <h3><i class="fas fa-history" aria-hidden="true"></i> Persistence</h3>
+                <button class="nav-item" data-section="persistence" aria-pressed="false">Advanced Persistence</button>
             </div>
             <div class="nav-section">
-                <h3><i class="fas fa-eye-slash"></i> Anti-Analysis</h3>
-                <button class="nav-item" data-section="analysis">Sandbox Evasion</button>
+                <h3><i class="fas fa-eye-slash" aria-hidden="true"></i> Anti-Analysis</h3>
+                <button class="nav-item" data-section="analysis" aria-pressed="false">Sandbox Evasion</button>
             </div>
             <div class="nav-section">
-                <h3><i class="fas fa-lock"></i> Encryption</h3>
-                <button class="nav-item" data-section="encryption">Crypto & Obfuscation</button>
+                <h3><i class="fas fa-lock" aria-hidden="true"></i> Encryption</h3>
+                <button class="nav-item" data-section="encryption" aria-pressed="false">Crypto & Obfuscation</button>
             </div>
             <div class="nav-section">
-                <h3><i class="fas fa-hammer"></i> LOLBAS</h3>
-                <button class="nav-item" data-section="lolbas">Living Off The Land</button>
+                <h3><i class="fas fa-hammer" aria-hidden="true"></i> LOLBAS</h3>
+                <button class="nav-item" data-section="lolbas" aria-pressed="false">Living Off The Land</button>
             </div>
             <div class="nav-section">
-                <h3><i class="fas fa-crown"></i> Privilege</h3>
-                <button class="nav-item" data-section="privilege">Privilege Escalation</button>
+                <h3><i class="fas fa-crown" aria-hidden="true"></i> Privilege</h3>
+                <button class="nav-item" data-section="privilege" aria-pressed="false">Privilege Escalation</button>
             </div>
             <div class="nav-section">
-                <h3><i class="fas fa-arrows-alt"></i> Lateral</h3>
-                <button class="nav-item" data-section="lateral">Lateral Movement</button>
+                <h3><i class="fas fa-arrows-alt" aria-hidden="true"></i> Lateral</h3>
+                <button class="nav-item" data-section="lateral" aria-pressed="false">Lateral Movement</button>
             </div>
             <div class="nav-section">
-                <h3><i class="fas fa-upload"></i> Exfiltration</h3>
-                <button class="nav-item" data-section="exfiltration">Data Exfiltration</button>
+                <h3><i class="fas fa-upload" aria-hidden="true"></i> Exfiltration</h3>
+                <button class="nav-item" data-section="exfiltration" aria-pressed="false">Data Exfiltration</button>
             </div>
             <div class="nav-section">
-                <h3><i class="fas fa-ghost"></i> Rootkit</h3>
-                <button class="nav-item" data-section="rootkit">Rootkit Techniques</button>
+                <h3><i class="fas fa-ghost" aria-hidden="true"></i> Rootkit</h3>
+                <button class="nav-item" data-section="rootkit" aria-pressed="false">Rootkit Techniques</button>
             </div>
             <div class="nav-section">
-                <h3><i class="fas fa-robot"></i> AI Evasion</h3>
-                <button class="nav-item" data-section="ai_evasion">AI/ML Evasion</button>
+                <h3><i class="fas fa-robot" aria-hidden="true"></i> AI Evasion</h3>
+                <button class="nav-item" data-section="ai_evasion" aria-pressed="false">AI/ML Evasion</button>
             </div>
             <div class="nav-section">
-                <h3><i class="fas fa-microchip"></i> Hardware</h3>
-                <button class="nav-item" data-section="hardware">Hardware Attacks</button>
+                <h3><i class="fas fa-microchip" aria-hidden="true"></i> Hardware</h3>
+                <button class="nav-item" data-section="hardware" aria-pressed="false">Hardware Attacks</button>
             </div>
             <div class="nav-section">
-                <h3><i class="fas fa-bug"></i> Zero-Day</h3>
-                <button class="nav-item" data-section="zero_day">Zero-Day Framework</button>
+                <h3><i class="fas fa-bug" aria-hidden="true"></i> Zero-Day</h3>
+                <button class="nav-item" data-section="zero_day" aria-pressed="false">Zero-Day Framework</button>
             </div>
             <div class="nav-section">
-                <h3><i class="fas fa-terminal"></i> Custom</h3>
-                <button class="nav-item" data-section="custom">Payload Builder</button>
+                <h3><i class="fas fa-terminal" aria-hidden="true"></i> Custom</h3>
+                <button class="nav-item" data-section="custom" aria-pressed="false">Payload Builder</button>
             </div>
         </nav>
 
         <!-- Main Content -->
-        <main class="main-content">
+        <main class="main-content" role="main">
             <!-- Search Bar -->
             <div class="search-container">
                 <div class="search-box">
-                    <i class="fas fa-search"></i>
-                    <input type="text" id="searchInput" placeholder="Search techniques, bypasses, or payloads... (Ctrl+F)">
-                    <button class="search-filter" id="filterBtn" title="Advanced Filters">
-                        <i class="fas fa-filter"></i>
+                    <i class="fas fa-search" aria-hidden="true"></i>
+                    <input type="text" id="searchInput" placeholder="Search techniques, bypasses, or payloads... (Ctrl+F)" aria-label="Search payloads">
+                    <button class="search-filter" id="filterBtn" title="Advanced Filters" aria-label="Open advanced filters">
+                        <i class="fas fa-filter" aria-hidden="true"></i>
                     </button>
                 </div>
             </div>
 
             <!-- Filter Panel -->
-            <div class="filter-panel" id="filterPanel">
+            <div class="filter-panel" id="filterPanel" role="dialog" aria-labelledby="filterTitle" aria-hidden="true">
+                <h3 id="filterTitle" class="sr-only">Advanced Filters</h3>
                 <div class="filter-group">
-                    <label>Complexity Level:</label>
-                    <div class="filter-options">
+                    <label for="complexity-filters">Complexity Level:</label>
+                    <div class="filter-options" id="complexity-filters" role="group">
                         <label class="filter-option">
                             <input type="checkbox" value="basic" checked> Basic
                         </label>
@@ -154,8 +157,8 @@
                     </div>
                 </div>
                 <div class="filter-group">
-                    <label>Target Platform:</label>
-                    <div class="filter-options">
+                    <label for="platform-filters">Target Platform:</label>
+                    <div class="filter-options" id="platform-filters" role="group">
                         <label class="filter-option">
                             <input type="checkbox" value="windows" checked> Windows
                         </label>
@@ -170,153 +173,215 @@
             </div>
 
             <!-- Content Sections -->
-            <!-- Basic Information Section -->
             <div class="content-section active" id="basic">
                 <div class="section-header">
-                    <h2><i class="fas fa-info-circle"></i> System Information</h2>
+                    <h2><i class="fas fa-info-circle" aria-hidden="true"></i> System Information</h2>
                     <span class="section-count">4 techniques</span>
                 </div>
-                <div class="payload-grid">
+                <div class="payload-grid" role="grid">
                     <!-- Content will be generated by JavaScript -->
                 </div>
             </div>
 
-            <!-- File System Section -->
             <div class="content-section" id="filesystem">
                 <div class="section-header">
-                    <h2><i class="fas fa-folder"></i> File System Operations</h2>
+                    <h2><i class="fas fa-folder" aria-hidden="true"></i> File System Operations</h2>
                     <span class="section-count">3 techniques</span>
                 </div>
-                <div class="payload-grid">
+                <div class="payload-grid" role="grid">
                     <!-- Content will be generated by JavaScript -->
                 </div>
             </div>
 
-            <!-- Security Section -->
             <div class="content-section" id="security">
                 <div class="section-header">
-                    <h2><i class="fas fa-users"></i> User & Security Information</h2>
+                    <h2><i class="fas fa-users" aria-hidden="true"></i> User & Security Information</h2>
                     <span class="section-count">4 techniques</span>
                 </div>
-                <div class="payload-grid">
+                <div class="payload-grid" role="grid">
                     <!-- Content will be generated by JavaScript -->
                 </div>
             </div>
 
-            <!-- Advanced Techniques Section -->
             <div class="content-section" id="advanced">
                 <div class="section-header">
-                    <h2><i class="fas fa-code"></i> Advanced Techniques</h2>
+                    <h2><i class="fas fa-code" aria-hidden="true"></i> Advanced Techniques</h2>
                     <span class="section-count">4 techniques</span>
                 </div>
-                <div class="payload-grid">
+                <div class="payload-grid" role="grid">
                     <!-- Content will be generated by JavaScript -->
                 </div>
             </div>
 
-            <!-- EDR Bypass Section -->
             <div class="content-section" id="edr">
                 <div class="section-header">
-                    <h2><i class="fas fa-shield-alt"></i> EDR Bypass Techniques</h2>
+                    <h2><i class="fas fa-shield-alt" aria-hidden="true"></i> EDR Bypass Techniques</h2>
                     <span class="section-count">6 techniques</span>
                 </div>
-                <div class="edr-warning">
-                    <i class="fas fa-exclamation-triangle"></i>
+                <div class="edr-warning" role="alert">
+                    <i class="fas fa-exclamation-triangle" aria-hidden="true"></i>
                     <span>Advanced Security Research Only - These techniques may trigger security solutions</span>
                 </div>
-                <div class="payload-grid">
+                <div class="payload-grid" role="grid">
                     <!-- Content will be generated by JavaScript -->
                 </div>
             </div>
 
-            <!-- Memory Manipulation Section -->
             <div class="content-section" id="memory">
                 <div class="section-header">
-                    <h2><i class="fas fa-brain"></i> Memory Manipulation</h2>
+                    <h2><i class="fas fa-brain" aria-hidden="true"></i> Memory Manipulation</h2>
                     <span class="section-count">5 techniques</span>
                 </div>
-                <div class="expert-warning">
-                    <i class="fas fa-radiation"></i>
+                <div class="expert-warning" role="alert">
+                    <i class="fas fa-radiation" aria-hidden="true"></i>
                     <span>Expert Level - Advanced memory manipulation techniques for security research</span>
                 </div>
-                <div class="payload-grid">
+                <div class="payload-grid" role="grid">
                     <!-- Content will be generated by JavaScript -->
                 </div>
             </div>
 
-            <!-- Network & Covert Channels Section -->
             <div class="content-section" id="network">
                 <div class="section-header">
-                    <h2><i class="fas fa-network-wired"></i> Network & Covert Channels</h2>
+                    <h2><i class="fas fa-network-wired" aria-hidden="true"></i> Network & Covert Channels</h2>
                     <span class="section-count">4 techniques</span>
                 </div>
-                <div class="payload-grid">
+                <div class="payload-grid" role="grid">
                     <!-- Content will be generated by JavaScript -->
                 </div>
             </div>
 
-            <!-- Advanced Persistence Section -->
             <div class="content-section" id="persistence">
                 <div class="section-header">
-                    <h2><i class="fas fa-history"></i> Advanced Persistence</h2>
+                    <h2><i class="fas fa-history" aria-hidden="true"></i> Advanced Persistence</h2>
                     <span class="section-count">4 techniques</span>
                 </div>
-                <div class="payload-grid">
+                <div class="payload-grid" role="grid">
                     <!-- Content will be generated by JavaScript -->
                 </div>
             </div>
 
-            <!-- Anti-Analysis & Sandbox Evasion Section -->
             <div class="content-section" id="analysis">
                 <div class="section-header">
-                    <h2><i class="fas fa-eye-slash"></i> Anti-Analysis & Sandbox Evasion</h2>
+                    <h2><i class="fas fa-eye-slash" aria-hidden="true"></i> Anti-Analysis & Sandbox Evasion</h2>
                     <span class="section-count">4 techniques</span>
                 </div>
-                <div class="payload-grid">
+                <div class="payload-grid" role="grid">
                     <!-- Content will be generated by JavaScript -->
                 </div>
             </div>
 
-            <!-- Encryption & Obfuscation Section -->
             <div class="content-section" id="encryption">
                 <div class="section-header">
-                    <h2><i class="fas fa-lock"></i> Encryption & Obfuscation</h2>
+                    <h2><i class="fas fa-lock" aria-hidden="true"></i> Encryption & Obfuscation</h2>
                     <span class="section-count">3 techniques</span>
                 </div>
-                <div class="payload-grid">
+                <div class="payload-grid" role="grid">
                     <!-- Content will be generated by JavaScript -->
                 </div>
             </div>
 
-            <!-- Living Off The Land Section -->
             <div class="content-section" id="lolbas">
                 <div class="section-header">
-                    <h2><i class="fas fa-hammer"></i> Living Off The Land (LOLBAS)</h2>
+                    <h2><i class="fas fa-hammer" aria-hidden="true"></i> Living Off The Land (LOLBAS)</h2>
                     <span class="section-count">4 techniques</span>
                 </div>
-                <div class="lolbas-info">
-                    <i class="fas fa-info-circle"></i>
+                <div class="lolbas-info" role="note">
+                    <i class="fas fa-info-circle" aria-hidden="true"></i>
                     <span>Legitimate binaries and scripts abused for malicious purposes</span>
                 </div>
-                <div class="payload-grid">
+                <div class="payload-grid" role="grid">
                     <!-- Content will be generated by JavaScript -->
                 </div>
+            </div>
+
+            <div class="content-section" id="privilege">
+                <div class="section-header">
+                    <h2><i class="fas fa-crown" aria-hidden="true"></i> Privilege Escalation</h2>
+                    <span class="section-count">4 techniques</span>
+                </div>
+                <div class="payload-grid" role="grid"></div>
+            </div>
+
+            <div class="content-section" id="lateral">
+                <div class="section-header">
+                    <h2><i class="fas fa-arrows-alt" aria-hidden="true"></i> Lateral Movement</h2>
+                    <span class="section-count">4 techniques</span>
+                </div>
+                <div class="payload-grid" role="grid"></div>
+            </div>
+
+            <div class="content-section" id="exfiltration">
+                <div class="section-header">
+                    <h2><i class="fas fa-upload" aria-hidden="true"></i> Data Exfiltration</h2>
+                    <span class="section-count">4 techniques</span>
+                </div>
+                <div class="payload-grid" role="grid"></div>
+            </div>
+
+            <div class="content-section" id="rootkit">
+                <div class="section-header">
+                    <h2><i class="fas fa-ghost" aria-hidden="true"></i> Rootkit Techniques</h2>
+                    <span class="section-count">4 techniques</span>
+                </div>
+                <div class="expert-warning" role="alert">
+                    <i class="fas fa-skull-crossbones" aria-hidden="true"></i>
+                    <span>EXTREME CAUTION - These techniques can cause permanent system damage</span>
+                </div>
+                <div class="payload-grid" role="grid"></div>
+            </div>
+
+            <div class="content-section" id="ai_evasion">
+                <div class="section-header">
+                    <h2><i class="fas fa-robot" aria-hidden="true"></i> AI/ML Evasion</h2>
+                    <span class="section-count">5 techniques</span>
+                </div>
+                <div class="ai-info" role="note">
+                    <i class="fas fa-brain" aria-hidden="true"></i>
+                    <span>Advanced techniques for evading AI-based security systems</span>
+                </div>
+                <div class="payload-grid" role="grid"></div>
+            </div>
+
+            <div class="content-section" id="hardware">
+                <div class="section-header">
+                    <h2><i class="fas fa-microchip" aria-hidden="true"></i> Hardware Attacks</h2>
+                    <span class="section-count">2 techniques</span>
+                </div>
+                <div class="expert-warning" role="alert">
+                    <i class="fas fa-radiation" aria-hidden="true"></i>
+                    <span>Hardware-level attacks requiring specialized knowledge and tools</span>
+                </div>
+                <div class="payload-grid" role="grid"></div>
+            </div>
+
+            <div class="content-section" id="zero_day">
+                <div class="section-header">
+                    <h2><i class="fas fa-bug" aria-hidden="true"></i> Zero-Day Framework</h2>
+                    <span class="section-count">2 techniques</span>
+                </div>
+                <div class="zero-day-warning" role="alert">
+                    <i class="fas fa-skull-crossbones" aria-hidden="true"></i>
+                    <span>RESEARCH ONLY - Zero-day exploitation framework for advanced security research</span>
+                </div>
+                <div class="payload-grid" role="grid"></div>
             </div>
 
             <!-- Custom Payload Builder -->
             <div class="content-section" id="custom">
                 <div class="section-header">
-                    <h2><i class="fas fa-terminal"></i> Custom Payload Builder</h2>
+                    <h2><i class="fas fa-terminal" aria-hidden="true"></i> Custom Payload Builder</h2>
                     <span class="section-count">Advanced Tool</span>
                 </div>
                 <div class="builder-container">
                     <div class="builder-input">
                         <label for="customCommand">PowerShell Command:</label>
-                        <textarea id="customCommand" placeholder="Enter your PowerShell command here... (Ctrl+Enter to build)" rows="8"></textarea>
+                        <textarea id="customCommand" placeholder="Enter your PowerShell command here... (Ctrl+Enter to build)" rows="8" aria-describedby="command-help"></textarea>
+                        <div id="command-help" class="sr-only">Enter PowerShell commands to create custom payloads for security research</div>
                     </div>
                     <div class="builder-options">
                         <div class="option-group">
-                            <h4><i class="fas fa-cogs"></i> Encoding Options</h4>
+                            <h4><i class="fas fa-cogs" aria-hidden="true"></i> Encoding Options</h4>
                             <label class="option">
                                 <input type="checkbox" id="encodeBase64">
                                 <span class="checkmark"></span>
@@ -334,132 +399,59 @@
                             </label>
                         </div>
                         <div class="option-group">
-                            <h4><i class="fas fa-palette"></i> Templates</h4>
+                            <h4><i class="fas fa-palette" aria-hidden="true"></i> Templates</h4>
                             <div class="template-buttons">
-                                <button class="template-btn" onclick="app.loadTemplate('download')">
-                                    <i class="fas fa-download"></i> Download & Execute
+                                <button class="template-btn" onclick="app.loadTemplate('download')" type="button">
+                                    <i class="fas fa-download" aria-hidden="true"></i> Download & Execute
                                 </button>
-                                <button class="template-btn" onclick="app.loadTemplate('reverse_shell')">
-                                    <i class="fas fa-terminal"></i> Reverse Shell
+                                <button class="template-btn" onclick="app.loadTemplate('reverse_shell')" type="button">
+                                    <i class="fas fa-terminal" aria-hidden="true"></i> Reverse Shell
                                 </button>
-                                <button class="template-btn" onclick="app.loadTemplate('persistence')">
-                                    <i class="fas fa-clock"></i> Persistence
+                                <button class="template-btn" onclick="app.loadTemplate('persistence')" type="button">
+                                    <i class="fas fa-clock" aria-hidden="true"></i> Persistence
                                 </button>
                             </div>
                         </div>
                     </div>
-                    <button class="btn-build" onclick="buildCustomPayload()">
-                        <i class="fas fa-hammer"></i> Build Payload
+                    <button class="btn-build" onclick="buildCustomPayload()" type="button">
+                        <i class="fas fa-hammer" aria-hidden="true"></i> Build Payload
                     </button>
                 </div>
-            </div>
-
-            <!-- Add new sections -->
-            <div class="content-section" id="privilege">
-                <div class="section-header">
-                    <h2><i class="fas fa-crown"></i> Privilege Escalation</h2>
-                    <span class="section-count">4 techniques</span>
-                </div>
-                <div class="payload-grid"></div>
-            </div>
-
-            <div class="content-section" id="lateral">
-                <div class="section-header">
-                    <h2><i class="fas fa-arrows-alt"></i> Lateral Movement</h2>
-                    <span class="section-count">4 techniques</span>
-                </div>
-                <div class="payload-grid"></div>
-            </div>
-
-            <div class="content-section" id="exfiltration">
-                <div class="section-header">
-                    <h2><i class="fas fa-upload"></i> Data Exfiltration</h2>
-                    <span class="section-count">4 techniques</span>
-                </div>
-                <div class="payload-grid"></div>
-            </div>
-
-            <div class="content-section" id="rootkit">
-                <div class="section-header">
-                    <h2><i class="fas fa-ghost"></i> Rootkit Techniques</h2>
-                    <span class="section-count">4 techniques</span>
-                </div>
-                <div class="expert-warning">
-                    <i class="fas fa-skull-crossbones"></i>
-                    <span>EXTREME CAUTION - These techniques can cause permanent system damage</span>
-                </div>
-                <div class="payload-grid"></div>
-            </div>
-
-            <div class="content-section" id="ai_evasion">
-                <div class="section-header">
-                    <h2><i class="fas fa-robot"></i> AI/ML Evasion</h2>
-                    <span class="section-count">5 techniques</span>
-                </div>
-                <div class="ai-info">
-                    <i class="fas fa-brain"></i>
-                    <span>Advanced techniques for evading AI-based security systems</span>
-                </div>
-                <div class="payload-grid"></div>
-            </div>
-
-            <div class="content-section" id="hardware">
-                <div class="section-header">
-                    <h2><i class="fas fa-microchip"></i> Hardware Attacks</h2>
-                    <span class="section-count">2 techniques</span>
-                </div>
-                <div class="expert-warning">
-                    <i class="fas fa-radiation"></i>
-                    <span>Hardware-level attacks requiring specialized knowledge and tools</span>
-                </div>
-                <div class="payload-grid"></div>
-            </div>
-
-            <div class="content-section" id="zero_day">
-                <div class="section-header">
-                    <h2><i class="fas fa-bug"></i> Zero-Day Framework</h2>
-                    <span class="section-count">2 techniques</span>
-                </div>
-                <div class="zero-day-warning">
-                    <i class="fas fa-skull-crossbones"></i>
-                    <span>RESEARCH ONLY - Zero-day exploitation framework for advanced security research</span>
-                </div>
-                <div class="payload-grid"></div>
             </div>
         </main>
 
         <!-- Bulk Selection Panel -->
-        <div class="bulk-panel" id="bulkPanel">
+        <aside class="bulk-panel" id="bulkPanel" role="complementary" aria-labelledby="bulkTitle">
             <div class="bulk-header">
-                <h3><i class="fas fa-layer-group"></i> Bulk Generation</h3>
+                <h3 id="bulkTitle"><i class="fas fa-layer-group" aria-hidden="true"></i> Bulk Generation</h3>
                 <span class="selected-count"><span id="selectedCount">0</span> selected</span>
             </div>
             <div class="bulk-content">
-                <div class="selected-list" id="selectedList"></div>
+                <div class="selected-list" id="selectedList" role="list"></div>
                 <div class="bulk-actions">
-                    <button class="btn-bulk-generate" onclick="app.generateBulkPayloads()">
-                        <i class="fas fa-rocket"></i> Generate All
+                    <button class="btn-bulk-generate" onclick="app.generateBulkPayloads()" type="button">
+                        <i class="fas fa-rocket" aria-hidden="true"></i> Generate All
                     </button>
-                    <button class="btn-bulk-clear" onclick="app.clearSelection()">
-                        <i class="fas fa-trash"></i> Clear
+                    <button class="btn-bulk-clear" onclick="app.clearSelection()" type="button">
+                        <i class="fas fa-trash" aria-hidden="true"></i> Clear
                     </button>
                 </div>
             </div>
-        </div>
+        </aside>
 
         <!-- Output Panel -->
-        <div class="output-panel" id="outputPanel">
+        <aside class="output-panel" id="outputPanel" role="complementary" aria-labelledby="outputTitle">
             <div class="panel-header">
-                <h3><i class="fas fa-code"></i> Generated Payload</h3>
+                <h3 id="outputTitle"><i class="fas fa-code" aria-hidden="true"></i> Generated Payload</h3>
                 <div class="panel-actions">
-                    <button class="btn-icon" onclick="copyToClipboard()" title="Copy to Clipboard (Ctrl+C)">
-                        <i class="fas fa-copy"></i>
+                    <button class="btn-icon" onclick="copyToClipboard()" title="Copy to Clipboard (Ctrl+C)" type="button">
+                        <i class="fas fa-copy" aria-hidden="true"></i>
                     </button>
-                    <button class="btn-icon" onclick="downloadPayload()" title="Download Payload">
-                        <i class="fas fa-download"></i>
+                    <button class="btn-icon" onclick="downloadPayload()" title="Download Payload" type="button">
+                        <i class="fas fa-download" aria-hidden="true"></i>
                     </button>
-                    <button class="btn-icon" onclick="closeOutput()" title="Close Panel (Esc)">
-                        <i class="fas fa-times"></i>
+                    <button class="btn-icon" onclick="closeOutput()" title="Close Panel (Esc)" type="button">
+                        <i class="fas fa-times" aria-hidden="true"></i>
                     </button>
                 </div>
             </div>
@@ -470,15 +462,15 @@
                 <div class="output-description" id="description"></div>
                 <div class="output-metadata" id="metadata"></div>
             </div>
-        </div>
+        </aside>
 
         <!-- Payload Details Modal -->
-        <div class="modal" id="detailsModal">
+        <div class="modal" id="detailsModal" role="dialog" aria-labelledby="modalTitle" aria-hidden="true">
             <div class="modal-content">
                 <div class="modal-header">
                     <h3 id="modalTitle">Payload Details</h3>
-                    <button class="btn-icon" onclick="closeModal()">
-                        <i class="fas fa-times"></i>
+                    <button class="btn-icon" onclick="closeModal()" type="button" aria-label="Close modal">
+                        <i class="fas fa-times" aria-hidden="true"></i>
                     </button>
                 </div>
                 <div class="modal-body" id="modalBody">
@@ -492,29 +484,36 @@
             <div class="footer-content">
                 <div class="footer-info">
                     <span>Developed by <strong>0x0806</strong></span>
-                    <span class="separator">|</span>
+                    <span class="separator" aria-hidden="true">|</span>
                     <span>Powered by Advanced Security Research</span>
-                    <span class="separator">|</span>
+                    <span class="separator" aria-hidden="true">|</span>
                     <span>Educational Use Only</span>
                 </div>
                 <div class="footer-links">
                     <a href="#" class="footer-link" title="Documentation">
-                        <i class="fas fa-book"></i> Documentation
+                        <i class="fab fa-book" aria-hidden="true"></i> Documentation
                     </a>
                     <a href="#" class="footer-link" title="GitHub Repository">
-                        <i class="fab fa-github"></i> GitHub
+                        <i class="fab fa-github" aria-hidden="true"></i> GitHub
                     </a>
                     <a href="#" class="footer-link" title="Security Guidelines">
-                        <i class="fas fa-shield-alt"></i> Guidelines
+                        <i class="fas fa-shield-alt" aria-hidden="true"></i> Guidelines
                     </a>
                     <a href="#" class="footer-link" title="Report Issues">
-                        <i class="fas fa-bug"></i> Issues
+                        <i class="fas fa-bug" aria-hidden="true"></i> Issues
                     </a>
                 </div>
             </div>
         </footer>
     </div>
 
+    <!-- Screen reader only content -->
+    <div class="sr-only">
+        <h1>Payload Arsenal - Advanced Cybersecurity Research Platform</h1>
+        <p>This platform provides advanced cybersecurity research tools for authorized security professionals. All content is for educational and ethical security research purposes only.</p>
+    </div>
+
     <script src="script.js"></script>
 </body>
 </html>
+
