@@ -956,6 +956,38 @@ body {
     gap: var(--spacing-lg);
 }
 
+.payload-placeholder {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--spacing-xl);
+    background: var(--bg-tertiary);
+    border: 2px dashed var(--border-color);
+    border-radius: var(--radius-lg);
+    text-align: center;
+}
+
+.placeholder-content {
+    opacity: 0.7;
+}
+
+.placeholder-content i {
+    font-size: 3rem;
+    color: var(--primary-color);
+    margin-bottom: var(--spacing-md);
+}
+
+.placeholder-content h4 {
+    color: var(--text-primary);
+    margin-bottom: var(--spacing-sm);
+}
+
+.placeholder-content p {
+    color: var(--text-secondary);
+    font-size: var(--font-size-sm);
+}
+
 .payload-card {
     background: var(--bg-tertiary);
     border: 1px solid var(--border-color);
