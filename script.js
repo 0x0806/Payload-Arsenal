@@ -990,9 +990,13 @@ class PayloadArsenal {
     }
 
     generateSinglePayload(type) {
-        const startTime = performance.now();
-        const payload = payloads[type];
-        if (!payload) return;
+        try {
+            const startTime = performance.now();
+            const payload = payloads[type];
+            if (!payload) {
+                this.showNotification('Payload not found', 'error');
+                return;
+            }
 
         // Add to history
         this.addToHistory(type, payload);
@@ -1095,6 +1099,10 @@ class PayloadArsenal {
 
             this.applySyntaxHighlighting();
             this.showNotification(`Generated ${payloadCount} related payloads for "${this.formatTitle(type)}"!`, 'success');
+        }
+        } catch (error) {
+            console.error('Error generating payload:', error);
+            this.showNotification('Error generating payload', 'error');
         }
     }
 
@@ -1290,22 +1298,77 @@ class PayloadArsenal {
         if (modal && modalTitle && modalBody) {
             modalTitle.textContent = this.formatTitle(type) + ' - Detailed Information';
 
-            modalBody.innerHTML = `
-                <div class="payload-details">
-                    <div class="detail-section">
-                        <h4><i class="fas fa-info-circle"></i> Overview</h4>
-                        <p>${payload.description}</p>
-                    </div>
+            // Create elements safely to prevent XSS
+            modalBody.innerHTML = '';
+            
+            const payloadDetails = document.createElement('div');
+            payloadDetails.className = 'payload-details';
+            
+            const overviewSection = document.createElement('div');
+            overviewSection.className = 'detail-section';
+            overviewSection.innerHTML = '<h4><i class="fas fa-info-circle"></i> Overview</h4>';
+            
+            const descriptionP = document.createElement('p');
+            descriptionP.textContent = payload.description;
+            overviewSection.appendChild(descriptionP);
+            
+            const commandSection = document.createElement('div');
+            commandSection.className = 'detail-section';
+            commandSection.innerHTML = '<h4><i class="fas fa-code"></i> Command</h4>';
+            
+            const codePreview = document.createElement('div');
+            codePreview.className = 'code-preview';
+            
+            const pre = document.createElement('pre');
+            const code = document.createElement('code');
+            code.textContent = payload.command;
+            pre.appendChild(code);
+            
+            const copyBtn = document.createElement('button');
+            copyBtn.className = 'copy-btn';
+            copyBtn.title = 'Copy command';
+            copyBtn.innerHTML = '<i class="fas fa-copy"></i>';
+            copyBtn.addEventListener('click', () => this.copyText(payload.command));
+            
+            codePreview.appendChild(pre);
+            codePreview.appendChild(copyBtn);
+            commandSection.appendChild(codePreview);
+            
+            payloadDetails.appendChild(overviewSection);
+            payloadDetails.appendChild(commandSection);
 
-                    <div class="detail-section">
-                        <h4><i class="fas fa-code"></i> Command</h4>
-                        <div class="code-preview">
-                            <pre><code>${payload.command}</code></pre>
-                            <button class="copy-btn" onclick="app.copyText('${payload.command.replace(/'/g, '\\\'')}')" title="Copy command">
-                                <i class="fas fa-copy"></i>
-                            </button>
-                        </div>
+            const technicalSection = document.createElement('div');
+            technicalSection.className = 'detail-section';
+            technicalSection.innerHTML = `
+                <h4><i class="fas fa-chart-line"></i> Technical Details</h4>
+                <div class="detail-grid">
+                    <div class="detail-item">
+                        <span class="label">Complexity:</span>
+                        <span class="value complexity-${payload.complexity}">${payload.complexity}</span>
                     </div>
+                    <div class="detail-item">
+                        <span class="label">Platform:</span>
+                        <span class="value">${payload.platform}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="label">Category:</span>
+                        <span class="value">${payload.category || 'General'}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="label">MITRE ATT&CK:</span>
+                        <span class="value">${payload.mitre_id || 'N/A'}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="label">Detection Difficulty:</span>
+                        <span class="value">${payload.detection_difficulty || 'Unknown'}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="label">Evasion Rating:</span>
+                        <span class="value">${'★'.repeat(payload.evasion_rating || 1)}${'☆'.repeat(5 - (payload.evasion_rating || 1))}</span>
+                    </div>
+                </div>
+            `;
+            payloadDetails.appendChild(technicalSection);
 
                     <div class="detail-section">
                         <h4><i class="fas fa-chart-line"></i> Technical Details</h4>
@@ -1371,15 +1434,32 @@ class PayloadArsenal {
     }
 
     buildCustomPayload() {
-        const customCommand = document.getElementById('customCommand');
-        const encodeBase64 = document.getElementById('encodeBase64');
-        const hiddenWindow = document.getElementById('hiddenWindow');
-        const bypassPolicy = document.getElementById('bypassPolicy');
+        try {
+            const customCommand = document.getElementById('customCommand');
+            const encodeBase64 = document.getElementById('encodeBase64');
+            const hiddenWindow = document.getElementById('hiddenWindow');
+            const bypassPolicy = document.getElementById('bypassPolicy');
 
-        if (!customCommand || !customCommand.value.trim()) {
-            this.showNotification('Please enter a PowerShell command first.', 'warning');
-            return;
-        }
+            if (!customCommand || !customCommand.value.trim()) {
+                this.showNotification('Please enter a PowerShell command first.', 'warning');
+                return;
+            }
+
+            // Basic validation for potentially dangerous commands
+            const dangerousPatterns = [
+                /rm\s+-rf/i,
+                /del\s+\/s/i,
+                /format\s+c:/i,
+                /shutdown\s+\/s/i
+            ];
+            
+            const command = customCommand.value.trim();
+            for (const pattern of dangerousPatterns) {
+                if (pattern.test(command)) {
+                    this.showNotification('Command contains potentially dangerous operations', 'warning');
+                    return;
+                }
+            }
 
         let finalPayload = customCommand.value.trim();
         let description = 'Custom PowerShell command';
@@ -1398,14 +1478,19 @@ class PayloadArsenal {
         }
 
         if (encodeBase64 && encodeBase64.checked) {
-            // Convert to Base64
-            const bytes = new TextEncoder().encode(customCommand.value);
-            const base64 = btoa(String.fromCharCode(...bytes));
-            finalPayload = `powershell.exe ${commandArgs.join(' ')} -EncodedCommand ${base64}`;
-            description += ' (Base64 encoded)';
-        } else {
-            finalPayload = `powershell.exe ${commandArgs.join(' ')} -Command "${customCommand.value.replace(/"/g, '\\"')}"`;
-        }
+                try {
+                    // Convert to Base64
+                    const bytes = new TextEncoder().encode(command);
+                    const base64 = btoa(String.fromCharCode(...bytes));
+                    finalPayload = `powershell.exe ${commandArgs.join(' ')} -EncodedCommand ${base64}`;
+                    description += ' (Base64 encoded)';
+                } catch (error) {
+                    this.showNotification('Error encoding command', 'error');
+                    return;
+                }
+            } else {
+                finalPayload = `powershell.exe ${commandArgs.join(' ')} -Command "${command.replace(/"/g, '\\"')}"`;
+            }
 
         // Show output
         const outputPanel = document.getElementById('outputPanel');
@@ -1449,6 +1534,10 @@ class PayloadArsenal {
 
             this.applySyntaxHighlighting();
             this.showNotification('Custom payload generated successfully!', 'success');
+        }
+        } catch (error) {
+            console.error('Error building custom payload:', error);
+            this.showNotification('Error building custom payload', 'error');
         }
     }
 
@@ -1653,12 +1742,16 @@ class PayloadArsenal {
     }
 
     copyText(text) {
+        // Sanitize text before copying
+        const sanitizedText = text.replace(/[<>]/g, '');
         if (navigator.clipboard) {
-            navigator.clipboard.writeText(text).then(() => {
+            navigator.clipboard.writeText(sanitizedText).then(() => {
                 this.showNotification('Command copied to clipboard!', 'success');
+            }).catch(() => {
+                this.fallbackCopyToClipboard(sanitizedText);
             });
         } else {
-            this.fallbackCopyToClipboard(text);
+            this.fallbackCopyToClipboard(sanitizedText);
         }
     }
 
