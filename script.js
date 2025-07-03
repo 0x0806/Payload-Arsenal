@@ -56,14 +56,14 @@ Write-Host "Domain: $($computerInfo.CsDomain)" -ForegroundColor Green
 Write-Host "Username: $env:USERNAME" -ForegroundColor Green
 
 # Hardware Information
-Write-Host "\`n[+] Hardware Information:" -ForegroundColor Yellow
+Write-Host "\\n[+] Hardware Information:" -ForegroundColor Yellow
 Get-WmiObject Win32_Processor | Select-Object Name, Architecture, NumberOfCores | Format-List
 Get-WmiObject Win32_PhysicalMemory | Measure-Object Capacity -Sum | ForEach-Object { 
     Write-Host "Total RAM: $([math]::Round($_.Sum / 1GB, 2)) GB" -ForegroundColor Cyan 
 }
 
 # Network Configuration
-Write-Host "\`n[+] Network Configuration:" -ForegroundColor Yellow
+Write-Host "\\n[+] Network Configuration:" -ForegroundColor Yellow
 Get-NetIPConfiguration | Where-Object { $_.NetAdapter.Status -eq "Up" } | ForEach-Object {
     Write-Host "Interface: $($_.InterfaceAlias)" -ForegroundColor Magenta
     Write-Host "IPv4: $($_.IPv4Address.IPAddress)" -ForegroundColor Magenta
@@ -72,16 +72,16 @@ Get-NetIPConfiguration | Where-Object { $_.NetAdapter.Status -eq "Up" } | ForEac
 }
 
 # Running Processes
-Write-Host "\`n[+] Top Processes by CPU:" -ForegroundColor Yellow
+Write-Host "\\n[+] Top Processes by CPU:" -ForegroundColor Yellow
 Get-Process | Sort-Object CPU -Descending | Select-Object -First 10 | Format-Table Name, Id, CPU, WorkingSet -AutoSize
 
 # Installed Software
-Write-Host "\`n[+] Recently Installed Software:" -ForegroundColor Yellow
+Write-Host "\\n[+] Recently Installed Software:" -ForegroundColor Yellow
 Get-WmiObject Win32_Product | Sort-Object InstallDate -Descending | Select-Object -First 10 | Format-Table Name, Version, InstallDate -AutoSize
 
 # Security Information
-Write-Host "\`n[+] Security Information:" -ForegroundColor Yellow
-$antivirus = Get-WmiObject -Namespace "root\SecurityCenter2" -Class AntiVirusProduct -ErrorAction SilentlyContinue
+Write-Host "\\n[+] Security Information:" -ForegroundColor Yellow
+$antivirus = Get-WmiObject -Namespace "root\\SecurityCenter2" -Class AntiVirusProduct -ErrorAction SilentlyContinue
 if ($antivirus) {
     $antivirus | ForEach-Object { Write-Host "Antivirus: $($_.displayName)" -ForegroundColor Red }
 }
@@ -1077,13 +1077,13 @@ Write-Host "[WARNING] Use only for authorized penetration testing!" -ForegroundC
             }
 
             // Filter toggle
-            const filterBtn = document.getElementById('filterBtn');
+            const filterBtn = document.querySelector('.search-filter');
             if (filterBtn) {
                 filterBtn.addEventListener('click', () => this.toggleFilters());
             }
 
             // Clear search
-            const clearBtn = document.getElementById('clearBtn');
+            const clearBtn = document.querySelector('.search-clear');
             if (clearBtn) {
                 clearBtn.addEventListener('click', () => this.clearSearch());
             }
@@ -1800,8 +1800,13 @@ Write-Host "[WARNING] Use only for authorized penetration testing!" -ForegroundC
     }
 
     showNotification(message, type = 'info') {
-        const container = document.getElementById('notificationContainer');
-        if (!container) return;
+        let container = document.getElementById('notificationContainer');
+        if (!container) {
+            container = document.createElement('div');
+            container.id = 'notificationContainer';
+            container.className = 'notification-container';
+            document.body.appendChild(container);
+        }
 
         const notification = document.createElement('div');
         notification.className = `notification notification-${type}`;
@@ -1825,13 +1830,26 @@ Write-Host "[WARNING] Use only for authorized penetration testing!" -ForegroundC
     }
 
     showLoadingIndicator(message = 'Loading...') {
-        const indicator = document.getElementById('loadingIndicator');
-        const text = document.getElementById('loadingText');
-        if (indicator && text) {
-            text.textContent = message;
-            indicator.style.display = 'flex';
-            indicator.classList.add('active');
+        let indicator = document.getElementById('loadingIndicator');
+        if (!indicator) {
+            indicator = document.createElement('div');
+            indicator.id = 'loadingIndicator';
+            indicator.className = 'loading-indicator';
+            indicator.innerHTML = `
+                <div class="loading-content">
+                    <div class="spinner"></div>
+                    <span id="loadingText">${message}</span>
+                </div>
+            `;
+            document.body.appendChild(indicator);
         }
+        
+        const text = document.getElementById('loadingText');
+        if (text) {
+            text.textContent = message;
+        }
+        indicator.style.display = 'flex';
+        indicator.classList.add('active');
     }
 
     hideLoadingIndicator() {
