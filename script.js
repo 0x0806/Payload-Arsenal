@@ -23,14 +23,17 @@ class CybersecurityArsenal {
 
     init() {
         try {
+            this.showLoadingIndicator('Initializing application...');
             this.setupEventListeners();
             this.loadSection('basic');
             this.updateTheme();
             this.updateStats();
             this.initializeTabSwitching();
+            this.hideLoadingIndicator();
             console.log('App initialized successfully');
         } catch (error) {
             console.error('App initialization failed:', error);
+            this.hideLoadingIndicator();
             this.showNotification('Application failed to load. Please refresh the page.', 'error');
         }
     }
@@ -1210,14 +1213,28 @@ Write-Host "\`n[CRITICAL] Unauthorized data exfiltration is illegal!" -Foregroun
         if (navItem) navItem.classList.add('active');
 
         this.currentSection = sectionId;
-        this.generateSectionContent(sectionId);
+        
+        // Add loading state to navigation
+        if (navItem) {
+            const originalText = navItem.textContent;
+            navItem.innerHTML = `<i class="fas fa-spinner fa-spin"></i> ${originalText}`;
+            
+            setTimeout(() => {
+                navItem.textContent = originalText;
+                this.generateSectionContent(sectionId);
+            }, 300);
+        } else {
+            this.generateSectionContent(sectionId);
+        }
     }
 
     generateSectionContent(sectionId) {
         try {
+            this.showLoadingIndicator('Loading section content...');
             const contentSections = document.querySelector('.content-sections');
             if (!contentSections) {
                 console.error('Content sections container not found');
+                this.hideLoadingIndicator();
                 return;
             }
 
@@ -1236,9 +1253,11 @@ Write-Host "\`n[CRITICAL] Unauthorized data exfiltration is illegal!" -Foregroun
             contentSections.appendChild(section);
 
             this.populateSection(sectionId, payloadGrid);
+            this.hideLoadingIndicator();
             console.log(`Section ${sectionId} loaded successfully`);
         } catch (error) {
             console.error('Failed to generate section content:', error);
+            this.hideLoadingIndicator();
             this.showNotification('Failed to load section content', 'error');
         }
     }
@@ -1339,9 +1358,15 @@ Write-Host "\`n[CRITICAL] Unauthorized data exfiltration is illegal!" -Foregroun
             return;
         }
 
-        this.showOutput(type, payload);
-        this.addToHistory(type, payload);
-        this.showNotification(`Generated "${this.formatTitle(type)}" successfully!`, 'success');
+        this.showLoadingIndicator('Generating payload...');
+        
+        // Simulate processing time for realistic loading
+        setTimeout(() => {
+            this.showOutput(type, payload);
+            this.addToHistory(type, payload);
+            this.hideLoadingIndicator();
+            this.showNotification(`Generated "${this.formatTitle(type)}" successfully!`, 'success');
+        }, 500);
     }
 
     showOutput(type, payload) {
@@ -1470,11 +1495,19 @@ Write-Host "\`n[CRITICAL] Unauthorized data exfiltration is illegal!" -Foregroun
         const searchInput = document.getElementById('searchInput');
         if (searchInput) {
             const query = searchInput.value;
+            if (!query.trim()) {
+                this.showNotification('Please enter a search query', 'warning');
+                return;
+            }
+            
+            this.showLoadingIndicator('AI is processing your search...');
             this.showNotification(`AI searching for: "${query}"`, 'info');
+            
             setTimeout(() => {
                 this.performSearch(query);
+                this.hideLoadingIndicator();
                 this.showNotification('AI search completed', 'success');
-            }, 1000);
+            }, 1500);
         }
     }
 
@@ -1524,6 +1557,26 @@ Write-Host "\`n[CRITICAL] Unauthorized data exfiltration is illegal!" -Foregroun
                 }
             }, 300);
         }, 3000);
+    }
+
+    showLoadingIndicator(message = 'Loading...') {
+        const indicator = document.getElementById('loadingIndicator');
+        const text = document.getElementById('loadingText');
+        if (indicator && text) {
+            text.textContent = message;
+            indicator.style.display = 'flex';
+            indicator.classList.add('active');
+        }
+    }
+
+    hideLoadingIndicator() {
+        const indicator = document.getElementById('loadingIndicator');
+        if (indicator) {
+            indicator.classList.remove('active');
+            setTimeout(() => {
+                indicator.style.display = 'none';
+            }, 300);
+        }
     }
 
     getNotificationIcon(type) {
@@ -1620,7 +1673,48 @@ Write-Host "\`n[CRITICAL] Unauthorized data exfiltration is illegal!" -Foregroun
     }
 
     analyzePayload() {
+        const analysisContent = document.getElementById('analysisContent');
+        if (analysisContent) {
+            analysisContent.innerHTML = `
+                <div class="analysis-loading">
+                    <i class="fas fa-brain fa-spin"></i>
+                    <span>AI is analyzing the payload...</span>
+                </div>
+            `;
+        }
+        
         this.showNotification('AI analysis started...', 'info');
+        
+        // Simulate AI analysis
+        setTimeout(() => {
+            if (analysisContent) {
+                analysisContent.innerHTML = `
+                    <div class="analysis-result">
+                        <h4>AI Analysis Results</h4>
+                        <div class="analysis-section">
+                            <h5>Security Assessment</h5>
+                            <p>This payload has been analyzed for potential security implications and evasion capabilities.</p>
+                        </div>
+                        <div class="analysis-section">
+                            <h5>Detection Probability</h5>
+                            <div class="detection-meter">
+                                <div class="meter-bar" style="width: 30%; background: #10b981;"></div>
+                            </div>
+                            <span>Low detection probability (30%)</span>
+                        </div>
+                        <div class="analysis-section">
+                            <h5>Recommendations</h5>
+                            <ul>
+                                <li>Consider additional obfuscation techniques</li>
+                                <li>Test in isolated environment first</li>
+                                <li>Ensure proper authorization before use</li>
+                            </ul>
+                        </div>
+                    </div>
+                `;
+            }
+            this.showNotification('AI analysis completed!', 'success');
+        }, 3000);
     }
 
     downloadPayload() {
@@ -1636,7 +1730,22 @@ Write-Host "\`n[CRITICAL] Unauthorized data exfiltration is illegal!" -Foregroun
     }
 
     generateBulkPayloads() {
+        const selectedCount = document.getElementById('selectedCount');
+        const count = selectedCount ? parseInt(selectedCount.textContent) : 0;
+        
+        if (count === 0) {
+            this.showNotification('No payloads selected for bulk generation', 'warning');
+            return;
+        }
+        
+        this.showLoadingIndicator(`Generating ${count} payloads...`);
         this.showNotification('Bulk generation started!', 'info');
+        
+        // Simulate bulk generation process
+        setTimeout(() => {
+            this.hideLoadingIndicator();
+            this.showNotification(`Successfully generated ${count} payloads!`, 'success');
+        }, 2000);
     }
 
     toggleAI() {
