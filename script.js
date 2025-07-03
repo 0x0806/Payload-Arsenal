@@ -1246,20 +1246,58 @@ Write-Host "[WARNING] Use only for authorized penetration testing!" -ForegroundC
                 <span class="category-tag">${payload.category}</span>
             </div>
             <div class="card-actions">
-                <button class="btn-primary" onclick="app.generatePayload('${key}')">
+                <button class="btn-primary generate-btn" data-key="${key}">
                     <i class="fas fa-rocket"></i> Generate
                 </button>
-                <button class="btn-secondary" onclick="app.copyToClipboard('${key}')">
+                <button class="btn-secondary copy-btn" data-key="${key}">
                     <i class="fas fa-copy"></i> Copy
                 </button>
-                <button class="btn-icon ${isFavorite ? 'active' : ''}" onclick="app.toggleFavorite('${key}')">
+                <button class="btn-icon favorite-btn ${isFavorite ? 'active' : ''}" data-key="${key}">
                     <i class="fas fa-heart"></i>
                 </button>
-                <button class="btn-icon" onclick="app.showPayloadDetails('${key}')">
+                <button class="btn-icon details-btn" data-key="${key}">
                     <i class="fas fa-info-circle"></i>
                 </button>
             </div>
         `;
+
+        // Add event listeners
+        const generateBtn = card.querySelector('.generate-btn');
+        const copyBtn = card.querySelector('.copy-btn');
+        const favoriteBtn = card.querySelector('.favorite-btn');
+        const detailsBtn = card.querySelector('.details-btn');
+
+        if (generateBtn) {
+            generateBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                this.generatePayload(key);
+            });
+        }
+
+        if (copyBtn) {
+            copyBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                this.copyToClipboard(key);
+            });
+        }
+
+        if (favoriteBtn) {
+            favoriteBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                this.toggleFavorite(key);
+            });
+        }
+
+        if (detailsBtn) {
+            detailsBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                this.showPayloadDetails(key);
+            });
+        }
 
         return card;
     }
@@ -1350,9 +1388,13 @@ Write-Host "[WARNING] Use only for authorized penetration testing!" -ForegroundC
 
     showOutput(type, payload) {
         const outputPanel = document.getElementById('outputPanel');
-        if (!outputPanel) return;
+        if (!outputPanel) {
+            console.error('Output panel not found');
+            return;
+        }
 
         outputPanel.classList.add('active');
+        outputPanel.style.display = 'block';
         this.currentPayload = { type, payload };
 
         const payloadOutput = document.getElementById('payloadOutput');
@@ -1361,6 +1403,8 @@ Write-Host "[WARNING] Use only for authorized penetration testing!" -ForegroundC
         
         if (payloadOutput) {
             payloadOutput.textContent = payload.command;
+            payloadOutput.style.whiteSpace = 'pre-wrap';
+            payloadOutput.style.fontFamily = 'monospace';
         }
         
         if (codeLanguage) {
@@ -1373,6 +1417,9 @@ Write-Host "[WARNING] Use only for authorized penetration testing!" -ForegroundC
 
         this.updateMetadataTab(type, payload);
         this.updateHistoryTab();
+        
+        // Scroll to output panel
+        outputPanel.scrollIntoView({ behavior: 'smooth' });
     }
 
     updateMetadataTab(type, payload) {
